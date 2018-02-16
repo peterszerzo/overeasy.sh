@@ -3,7 +3,12 @@
     <title>OverEasy | Complicated Computer Art</title>
     <link rel="icon" href="/static/favicon.ico" type="image/x-icon" />
     <style>
+      html,
       body {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
         background-color: #ffc235;
       }
     </style>
@@ -34,7 +39,12 @@
   <body>
     <script src="/_compile/Main.elm"></script>
     <script>
-      var app = Elm.Main.fullscreen()
+      if (!window.location.hash) {
+        history.pushState({}, "", "#home")
+      }
+      setTimeout(function() {
+        var app = Elm.Main.fullscreen()
+      }, 50)
     </script>
   </body>
 </html>
