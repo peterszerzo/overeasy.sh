@@ -38,16 +38,13 @@ view model =
             12
 
         size =
-            1600
+            800
 
         top =
-            400
+            200
 
         left =
-            600
-
-        isTop =
-            True
+            -400
 
         scale =
             size / 100
@@ -69,20 +66,34 @@ view model =
             Matrix4.mul (Matrix4.makePerspective 45 1 0.01 100)
                 (Matrix4.makeLookAt eye (vec3 0 0 0) (vec3 0 0 1))
     in
-        WebGL.toHtmlWith
-            [ WebGL.alpha True
-            , WebGL.depth 1
-            , WebGL.antialias
-            ]
-            [ width (floor size)
-            , height (floor size)
-            , style
-                [ ( "position", "absolute" )
-                , ( "top", "-" ++ ((toString << floor) top) ++ "px" )
-                , ( "left", "-" ++ ((toString << floor) left) ++ "px" )
+        div
+            [ style
+                [ ( "width", "800px" )
+                , ( "height", "480px" )
+                , ( "border", "2px solid #000" )
+                , ( "background-color", "white" )
+                , ( "position", "absolute" )
+                , ( "top", "50%" )
+                , ( "left", "50%" )
+                , ( "overflow", "hidden" )
+                , ( "transform", "translate3d(-50%, -50%, 0)" )
                 ]
             ]
-            [ globeEntity perspective
+            [ WebGL.toHtmlWith
+                [ WebGL.alpha True
+                , WebGL.depth 1
+                , WebGL.antialias
+                ]
+                [ width (floor size)
+                , height (floor size)
+                , style
+                    [ ( "position", "absolute" )
+                    , ( "top", "-" ++ ((toString << floor) top) ++ "px" )
+                    , ( "left", "-" ++ ((toString << floor) left) ++ "px" )
+                    ]
+                ]
+                [ globeEntity perspective
+                ]
             ]
 
 
@@ -348,6 +359,8 @@ varying float brightness;
 varying vec2 vCoord;
 
 void main() {
+  vec4 color1 = vec4(0.9176, 0.745, 0.3647, 1.0);
+  vec4 color2 = vec4(0.247, 0.1922, 0.3098, 1.0);
   vec4 color = vec4(0.5, 0.3, 0.1, 1.0);
   float luminosity = 0.21 * color.r + 0.72 * color.g + 0.07 * color.b;
   gl_FragColor = vec4(

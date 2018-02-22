@@ -1,5 +1,6 @@
 module Views.Bg exposing (..)
 
+import Time
 import Html exposing (Html)
 import Html.Attributes exposing (style)
 import Math.Vector2 as Vector2 exposing (Vec2, vec2)
@@ -7,8 +8,8 @@ import WebGL
 import Window
 
 
-view : Window.Size -> Html msg
-view window =
+view : Window.Size -> Time.Time -> Html msg
+view window time =
     let
         size =
             max window.width window.height
@@ -39,7 +40,7 @@ view window =
                 fragmentShader
                 mesh
                 { resolution = vec2 (toFloat size) (toFloat size)
-                , time = 0
+                , time = time
                 }
             ]
 
@@ -102,9 +103,10 @@ void main() {
   vec2 coord = st - vec2(0.5, 0.5);
   float angle = polarAngle(coord);
   vec4 color;
-  if (length(coord) < 0.3 + 0.03 * sin(4.0 * angle + 0.1) + 0.01 * sin(3.0 * angle + 0.1)) {
+  if (length(coord) < 0.3 + 0.03 * sin(4.0 * angle + 0.1 - time * 0.0002) + 0.01 * sin(3.0 * angle + 0.1 + time * 0.0006)) {
     color = vec4(0.0, 0.0, 0.0, 0.0);
   } else {
+    color = vec4(11.0 / 255.0, 79.0 / 255.0, 108.0 / 255.0, 0.01);
     color = vec4(0.0, 0.0, 0.0, 0.05);
   }
   gl_FragColor = color;

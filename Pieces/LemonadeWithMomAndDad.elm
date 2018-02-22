@@ -9,9 +9,6 @@ import Html.Styled exposing (Html, text, div, img)
 import Html.Styled.Attributes exposing (class, css, style, src)
 
 
----- Model ----
-
-
 type alias Coordinates =
     List ( Float, Float )
 
@@ -38,10 +35,6 @@ init =
 generateCoordinates : Cmd Msg
 generateCoordinates =
     Random.generate ReceiveLemons coordinatesGenerator
-
-
-
----- Update ----
 
 
 type Msg
@@ -76,10 +69,6 @@ update msg model =
                     ( model, Cmd.none )
 
 
-
----- View ----
-
-
 coordinatesGenerator : Random.Generator Coordinates
 coordinatesGenerator =
     Random.list 25 <|
@@ -104,7 +93,7 @@ portrait =
 
 view : Model -> Html Msg
 view model =
-    div [ class "container" ]
+    div []
         [ div
             [ css
                 [ position absolute
@@ -161,10 +150,6 @@ view model =
                 )
                 model.lemons
         ]
-
-
-
--- Subscriptions --
 
 
 subscriptions : Model -> Sub Msg

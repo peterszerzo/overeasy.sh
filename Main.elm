@@ -1,9 +1,12 @@
 module Main exposing (..)
 
+import Time
 import Task
-import Html exposing (Html, text, div, img)
-import Html.Attributes exposing (style)
-import Html.Styled exposing (toUnstyled)
+import AnimationFrame
+import Css exposing (..)
+import Html exposing (Html)
+import Html.Styled exposing (fromUnstyled, toUnstyled, text, div, img)
+import Html.Styled.Attributes exposing (css)
 import Pieces.MoreSimpleLessSimple
 import Pieces.ThisWayThatWay
 import Navigation
@@ -42,11 +45,15 @@ type Msg
     | ThisWayThatWayMsg Pieces.ThisWayThatWay.Msg
     | MoreSimpleLessSimpleMsg Pieces.MoreSimpleLessSimple.Msg
     | Resize Window.Size
+    | Tick Time.Time
+    | StartTime Time.Time
 
 
 type alias Model =
     { route : Route
     , window : Window.Size
+    , startTime : Time.Time
+    , time : Time.Time
     }
 
 
@@ -70,36 +77,55 @@ init location =
             parse location
     in
         ( { route = route
-          , window = { width = 0, height = 0 }
+          , window =
+                { width = 0
+                , height = 0
+                }
+          , startTime = 0
+          , time = 0
           }
         , Cmd.batch
             [ routeInitCmd route
             , Window.size |> Task.perform Resize
+            , Time.now |> Task.perform StartTime
             ]
         )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case ( msg, model.route ) of
-        ( ChangeRoute route, _ ) ->
+    case msg of
+        ChangeRoute route ->
             ( { model | route = route }, routeInitCmd route )
 
-        ( Resize window, _ ) ->
+        Resize window ->
             ( { model | window = window }, Cmd.none )
 
-        ( ThisWayThatWayMsg msg, ThisWayThatWay model_ ) ->
-            ( { model | route = ThisWayThatWay (Pieces.ThisWayThatWay.update msg model_ |> Tuple.first) }
-            , Pieces.ThisWayThatWay.update msg model_ |> Tuple.second |> Cmd.map ThisWayThatWayMsg
-            )
+        Tick time ->
+            ( { model | time = time }, Cmd.none )
 
-        ( MoreSimpleLessSimpleMsg msg, MoreSimpleLessSimple model_ ) ->
-            ( { model | route = MoreSimpleLessSimple (Pieces.MoreSimpleLessSimple.update msg model_ |> Tuple.first) }
-            , Pieces.MoreSimpleLessSimple.update msg model_ |> Tuple.second |> Cmd.map MoreSimpleLessSimpleMsg
-            )
+        StartTime time ->
+            ( { model | startTime = time }, Cmd.none )
 
-        _ ->
-            ( model, Cmd.none )
+        ThisWayThatWayMsg msg ->
+            case model.route of
+                ThisWayThatWay model_ ->
+                    ( { model | route = ThisWayThatWay (Pieces.ThisWayThatWay.update msg model_ |> Tuple.first) }
+                    , Pieces.ThisWayThatWay.update msg model_ |> Tuple.second |> Cmd.map ThisWayThatWayMsg
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        MoreSimpleLessSimpleMsg msg ->
+            case model.route of
+                MoreSimpleLessSimple model_ ->
+                    ( { model | route = MoreSimpleLessSimple (Pieces.MoreSimpleLessSimple.update msg model_ |> Tuple.first) }
+                    , Pieces.MoreSimpleLessSimple.update msg model_ |> Tuple.second |> Cmd.map MoreSimpleLessSimpleMsg
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
 
 
 view : Model -> Html Msg
@@ -107,21 +133,27 @@ view model =
     case model.route of
         Home ->
             div
-                [ style
-                    [ ( "width", "100%" )
-                    , ( "height", "100%" )
-                    , ( "background-color", "#ffc235" )
+                [ css
+                    [ width (pct 100)
+                    , position absolute
+                    , Css.top (px 0)
+                    , Css.left (px 0)
+                    , overflow hidden
+                    , height (pct 100)
+                    , backgroundColor (hex "ffc235")
                     ]
                 ]
-                [ Views.Home.view |> toUnstyled
-                , Views.Bg.view model.window
+                [ Views.Home.view
+                , Views.Bg.view model.window (model.time - model.startTime) |> fromUnstyled
                 ]
+                |> toUnstyled
 
         NotFound ->
             Html.text "Not found"
 
         ThisWayThatWay model ->
-            Pieces.ThisWayThatWay.view model |> Html.map ThisWayThatWayMsg
+            Pieces.ThisWayThatWay.view model
+                |> Html.map ThisWayThatWayMsg
 
         MoreSimpleLessSimple model ->
             Pieces.MoreSimpleLessSimple.view model |> Html.map MoreSimpleLessSimpleMsg
@@ -140,6 +172,7 @@ subscriptions model =
             _ ->
                 Sub.none
         , Window.resizes Resize
+        , AnimationFrame.times Tick
         ]
 
 

@@ -1,6 +1,7 @@
 module Views.Home exposing (..)
 
 import Css exposing (..)
+import Css.Media as Media
 import Html.Attributes exposing (style)
 import Html.Styled exposing (Html, text, div, img, h2, a, p)
 import Html.Styled.Attributes exposing (class, css, src, href)
@@ -58,7 +59,13 @@ view =
             , property "z-index" "100"
             ]
         ]
-        [ div [ css [ textAlign center, position relative ] ]
+        [ div
+            [ css
+                [ textAlign center
+                , position relative
+                , padding (px 20)
+                ]
+            ]
             [ div
                 [ css
                     [ width (px 150)
@@ -72,19 +79,48 @@ view =
                     [ css
                         [ fontSize (Css.rem 1)
                         , position absolute
-                        , top (px 55)
-                        , right (px -100)
+                        , top (px 40)
+                        , width (px 140)
+                        , lineHeight (num 1.4)
+                        , textAlign center
+                        , right (px -110)
+                        , letterSpacing (Css.rem 0.08)
                         , property "transform" "rotateZ(-90deg)"
                         , property "transform-origin" "center center"
                         , fontWeight normal
                         ]
                     ]
-                    [ text "( computer art )" ]
+                    [ text "it's like computer art" ]
                 ]
-            , div [ css [ maxWidth (px 640), marginTop (px 40) ] ]
-                [ p [] [ text "..." ]
+            , div
+                [ css
+                    [ maxWidth (px 640)
+                    , marginTop (px 60)
+                    , display none
+                    , Media.withMediaQuery [ "screen and (min-width: 960px)" ]
+                        [ display block ]
+                    ]
+                ]
+                [ link ( "/", "Next -->" )
                 , div [] <| List.map link (List.reverse links)
-                , p [] [ text "..." ]
+                , link ( "/", "<-- Previous" )
+                ]
+            , div
+                [ css
+                    [ maxWidth (px 640)
+                    , marginTop (px 40)
+                    , display block
+                    , Media.withMediaQuery [ "screen and (min-width: 960px)" ]
+                        [ display none ]
+                    ]
+                ]
+                [ p
+                    [ css
+                        [ fontSize (Css.rem 1)
+                        , lineHeight (num 1.6)
+                        ]
+                    ]
+                    [ text "I could not be bothered making OverEasy into a mobile-friendly experience - see you on a desktop screen, though!" ]
                 ]
             ]
         ]
