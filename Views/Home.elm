@@ -35,7 +35,7 @@ link ( url, label ) =
 links : List ( String, String )
 links =
     [ ( "#more-simple-less-simple", "1. More simple, less simple" )
-    , ( "#this-way-that-way", "2. This way, that way" )
+    , ( "#this-way-that-way", "2. This way, that way (..WIP..)" )
     , ( "", "3. Bureaucracy is distracting" )
     , ( "", "4. Lemonade with mom and dad" )
     , ( "", "5. My sweet soothing tax id" )
@@ -78,26 +78,26 @@ view =
                 , h2
                     [ css
                         [ fontSize (Css.rem 1)
-                        , position absolute
-                        , top (px 40)
+                        , position fixed
+                        , property "top" "calc(50% - 40vmin)"
+                        , property "right" "calc(50% - 40vmin)"
                         , width (px 140)
                         , lineHeight (num 1.4)
                         , textAlign center
-                        , right (px -110)
                         , letterSpacing (Css.rem 0.08)
-                        , property "transform" "rotateZ(-90deg)"
+                        , property "transform" "rotateZ(+45deg)"
                         , property "transform-origin" "center center"
                         , fontWeight normal
                         ]
                     ]
-                    [ text "it's like computer art" ]
+                    [ text "(it's like computer art)" ]
                 ]
             , div
                 [ css
                     [ maxWidth (px 640)
-                    , marginTop (px 60)
+                    , marginTop (px 40)
                     , display none
-                    , Media.withMediaQuery [ "screen and (min-width: 960px)" ]
+                    , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
                         [ display block ]
                     ]
                 ]
@@ -110,7 +110,7 @@ view =
                     [ maxWidth (px 640)
                     , marginTop (px 40)
                     , display block
-                    , Media.withMediaQuery [ "screen and (min-width: 960px)" ]
+                    , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
                         [ display none ]
                     ]
                 ]
@@ -120,7 +120,7 @@ view =
                         , lineHeight (num 1.6)
                         ]
                     ]
-                    [ text "I could not be bothered making OverEasy into a mobile-friendly experience - see you on a desktop screen, though!" ]
+                    [ text "Some birds are not meant to be resized (as in OverEasy does not support mobile). Enjoy your train ride!" ]
                 ]
             ]
         ]

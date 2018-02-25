@@ -103,11 +103,16 @@ void main() {
   vec2 coord = st - vec2(0.5, 0.5);
   float angle = polarAngle(coord);
   vec4 color;
-  if (length(coord) < 0.3 + 0.03 * sin(4.0 * angle + 0.1 - time * 0.0002) + 0.01 * sin(3.0 * angle + 0.1 + time * 0.0006)) {
+  float wave1 = 0.03 * sin(4.0 * angle + 0.1 - time * 0.0002);
+  float wave2 = 0.01 * sin(3.0 * angle + 0.1 + time * 0.0006);
+  float wave3 = 0.025 * sin(5.0 * angle + 0.1 - time * 0.0002);
+  float wave4 = 0.015 * sin(4.0 * angle + 0.1 + time * 0.0006);
+  if (length(coord) < 0.3 + wave1 + wave2) {
     color = vec4(0.0, 0.0, 0.0, 0.0);
-  } else {
-    color = vec4(11.0 / 255.0, 79.0 / 255.0, 108.0 / 255.0, 0.01);
+  } else if (length(coord) < 0.32 + wave3 + wave4) {
     color = vec4(0.0, 0.0, 0.0, 0.05);
+  } else {
+    color = vec4(0.0, 0.0, 0.0, 0.08);
   }
   gl_FragColor = color;
 }

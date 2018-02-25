@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
     "summary": "it's like computer art",
-    "repository": "https://github.com/peterszerzo/overeasy.sh.git",
+    "repository": "https://github.com/peterszerzo/overeasy.git",
     "license": "BSD3",
     "source-directories": [
         "."

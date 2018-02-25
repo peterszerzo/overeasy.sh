@@ -130,8 +130,8 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    case model.route of
-        Home ->
+    let
+        homeView =
             div
                 [ css
                     [ width (pct 100)
@@ -147,16 +147,23 @@ view model =
                 , Views.Bg.view model.window (model.time - model.startTime) |> fromUnstyled
                 ]
                 |> toUnstyled
+    in
+        if model.window.width < 600 then
+            homeView
+        else
+            case model.route of
+                Home ->
+                    homeView
 
-        NotFound ->
-            Html.text "Not found"
+                NotFound ->
+                    Html.text "Not found"
 
-        ThisWayThatWay model ->
-            Pieces.ThisWayThatWay.view model
-                |> Html.map ThisWayThatWayMsg
+                ThisWayThatWay model ->
+                    Pieces.ThisWayThatWay.view model
+                        |> Html.map ThisWayThatWayMsg
 
-        MoreSimpleLessSimple model ->
-            Pieces.MoreSimpleLessSimple.view model |> Html.map MoreSimpleLessSimpleMsg
+                MoreSimpleLessSimple model ->
+                    Pieces.MoreSimpleLessSimple.view model |> Html.map MoreSimpleLessSimpleMsg
 
 
 subscriptions : Model -> Sub Msg
