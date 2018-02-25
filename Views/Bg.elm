@@ -117,3 +117,55 @@ void main() {
   gl_FragColor = color;
 }
 |]
+
+purlinFragmentShaderCode : String
+purlinFragmentShaderCode = """
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+uniform float u_time;
+
+float rand(float x) { 
+  return fract(sin(x) * 43758.5453123);
+}
+
+float perlin(float x) {
+  float i = floor(x);  // integer
+  float f = fract(x);  // fraction
+  return mix(rand(i), rand(i + 1.0), smoothstep(0.,1.,f));
+}
+
+const float pi = 3.14159265358979323;
+
+void main() {
+  vec2 st = gl_FragCoord.xy/u_resolution.xy;
+
+  vec2 stc = st * 10.0;
+  vec2 ipos = floor(stc);
+  vec2 fpos = fract(stc);
+
+  vec2 fromCenter = st - vec2(0.5, 0.5);
+  float d = length(fromCenter);
+
+  float dot = dot(fromCenter / d, vec2(1.0, 0.0));
+
+  float angle = acos(dot);
+
+  if (fromCenter.y < 0.0) {
+    angle = 2.0 * pi - acos(dot);
+  } else {
+    angle = acos(dot);
+  }
+
+  float randomArgument = sin(8.0 * angle / pi + u_time / 6.0);
+
+  if (d < 0.22 + 0.12 * perlin(randomArgument)) {
+    discard;
+  } else {
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.04);
+  }
+}
+"""
