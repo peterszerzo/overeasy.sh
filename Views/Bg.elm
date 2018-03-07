@@ -103,11 +103,11 @@ void main() {
   vec2 coord = st - vec2(0.5, 0.5);
   float angle = polarAngle(coord);
   vec4 color;
-  float wave1 = 0.03 * sin(4.0 * angle + 0.1 - time * 0.0002);
-  float wave2 = 0.01 * sin(3.0 * angle + 0.1 + time * 0.0006);
-  float wave3 = 0.025 * sin(5.0 * angle + 0.1 - time * 0.0002);
-  float wave4 = 0.015 * sin(4.0 * angle + 0.1 + time * 0.0006);
-  if (length(coord) < 0.3 + wave1 + wave2) {
+  float wave1 = 0.030 * sin(5.0 * angle - time * 0.00015);
+  float wave2 = 0.010 * sin(2.0 * angle - time * 0.0006);
+  float wave3 = 0.035 * sin(5.0 * angle - time * 0.00015);
+  float wave4 = 0.005 * sin(3.0 * angle + time * 0.0003);
+  if (length(coord) < 0.28 + wave1 + wave2) {
     color = vec4(0.0, 0.0, 0.0, 0.0);
   } else if (length(coord) < 0.32 + wave3 + wave4) {
     color = vec4(0.0, 0.0, 0.0, 0.05);
@@ -118,8 +118,10 @@ void main() {
 }
 |]
 
+
 purlinFragmentShaderCode : String
-purlinFragmentShaderCode = """
+purlinFragmentShaderCode =
+    """
 #ifdef GL_ES
 precision mediump float;
 #endif
@@ -128,7 +130,7 @@ uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
 
-float rand(float x) { 
+float rand(float x) {
   return fract(sin(x) * 43758.5453123);
 }
 

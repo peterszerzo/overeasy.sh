@@ -27,14 +27,14 @@ type Route
 parse : Navigation.Location -> Route
 parse location =
     location
-        |> parseHash matchers
+        |> parsePath matchers
         |> Maybe.withDefault Home
 
 
 matchers : Parser (Route -> a) a
 matchers =
     oneOf
-        [ s "home" |> map Home
+        [ s "" |> map Home
         , s "more-simple-less-simple" |> map (Pieces.MoreSimpleLessSimple.init |> Tuple.first |> MoreSimpleLessSimple)
         , s "this-way-that-way" |> map (Pieces.ThisWayThatWay.init |> Tuple.first |> ThisWayThatWay)
         ]
@@ -42,6 +42,7 @@ matchers =
 
 type Msg
     = ChangeRoute Route
+    | Navigate String
     | ThisWayThatWayMsg Pieces.ThisWayThatWay.Msg
     | MoreSimpleLessSimpleMsg Pieces.MoreSimpleLessSimple.Msg
     | Resize Window.Size
@@ -117,6 +118,9 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        Navigate newPath ->
+            ( model, Navigation.newUrl newPath )
+
         MoreSimpleLessSimpleMsg msg ->
             case model.route of
                 MoreSimpleLessSimple model_ ->
@@ -143,7 +147,7 @@ view model =
                     , backgroundColor (hex "ffc235")
                     ]
                 ]
-                [ Views.Home.view
+                [ Views.Home.view Navigate
                 , Views.Bg.view model.window (model.time - model.startTime) |> fromUnstyled
                 ]
                 |> toUnstyled

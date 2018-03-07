@@ -52,8 +52,8 @@
   <body>
     <script src="/_compile/Main.elm"></script>
     <script>
-      if (!window.location.hash) {
-        history.pushState({}, "", "#home")
+      if (window.location.hostname === "localhost") {
+        history.pushState({}, "", "/")
       }
       setTimeout(function() {
         var app = Elm.Main.fullscreen()

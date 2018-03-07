@@ -1,18 +1,21 @@
 module Views.Home exposing (..)
 
+import Json.Decode as Decode
 import Css exposing (..)
 import Css.Media as Media
 import Html.Attributes exposing (style)
 import Html.Styled exposing (Html, text, div, img, h2, a, p)
 import Html.Styled.Attributes exposing (class, css, src, href)
+import Html.Styled.Events exposing (onWithOptions)
 import Svg.Styled exposing (svg, use)
 import Svg.Styled.Attributes exposing (viewBox, xlinkHref)
 
 
-link : ( String, String ) -> Html msg
-link ( url, label ) =
+link : (String -> msg) -> ( String, String ) -> Html msg
+link navigate ( url, label ) =
     a
         [ href url
+        , onWithOptions "click" { preventDefault = True, stopPropagation = False } (navigate url |> Decode.succeed)
         , css
             [ textDecoration none
             , color inherit
@@ -34,16 +37,16 @@ link ( url, label ) =
 
 links : List ( String, String )
 links =
-    [ ( "#more-simple-less-simple", "1. More simple, less simple" )
-    , ( "#this-way-that-way", "2. This way, that way (..WIP..)" )
+    [ ( "/more-simple-less-simple", "1. More simple, less simple" )
+    , ( "", "2. This way, that way (..SOON..)" )
     , ( "", "3. Bureaucracy is distracting" )
     , ( "", "4. Lemonade with mom and dad" )
     , ( "", "5. My sweet soothing tax id" )
     ]
 
 
-view : Html msg
-view =
+view : (String -> msg) -> Html msg
+view navigate =
     div
         [ css
             [ width (pct 100)
@@ -81,7 +84,7 @@ view =
                         , position fixed
                         , property "top" "calc(50% - 40vmin)"
                         , property "right" "calc(50% - 40vmin)"
-                        , width (px 140)
+                        , width (px 160)
                         , lineHeight (num 1.4)
                         , textAlign center
                         , letterSpacing (Css.rem 0.08)
@@ -90,7 +93,7 @@ view =
                         , fontWeight normal
                         ]
                     ]
-                    [ text "(it's like computer art)" ]
+                    [ text "~ it's like computer art ~" ]
                 ]
             , div
                 [ css
@@ -101,9 +104,10 @@ view =
                         [ display block ]
                     ]
                 ]
-                [ link ( "/", "Next -->" )
-                , div [] <| List.map link (List.reverse links)
-                , link ( "/", "<-- Previous" )
+                [ -- link navigate ( "/", "Next -->" ) ,
+                  div [] <| List.map (link navigate) links
+
+                -- , link navigate ( "/", "<-- Previous" )
                 ]
             , div
                 [ css

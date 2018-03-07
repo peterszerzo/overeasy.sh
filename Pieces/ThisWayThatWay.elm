@@ -335,6 +335,7 @@ varying vec2 vCoord;
 
 void main() {
   const float pi = 3.14159265359;
+  const vec3 color1 = vec3();
   brightness = 1.0 + (1.0 - dot(
     normalize(vec3(0.3, -0.2, 1)),
     normalize(vec3(normal))
@@ -359,8 +360,8 @@ varying float brightness;
 varying vec2 vCoord;
 
 void main() {
-  vec4 color1 = vec4(0.9176, 0.745, 0.3647, 1.0);
-  vec4 color2 = vec4(0.247, 0.1922, 0.3098, 1.0);
+  vec4 color1 = vec4(235.0 / 255.0, 183.0 / 255.0, 73.0 / 255.0);
+  vec4 color2 = vec4(60.0 / 255.0, 50.0 / 255.0, 79.0 / 255.0);
   vec4 color = vec4(0.5, 0.3, 0.1, 1.0);
   float luminosity = 0.21 * color.r + 0.72 * color.g + 0.07 * color.b;
   gl_FragColor = vec4(
