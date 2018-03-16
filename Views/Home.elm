@@ -9,6 +9,7 @@ import Html.Styled.Attributes exposing (class, css, src, href)
 import Html.Styled.Events exposing (onWithOptions)
 import Svg.Styled exposing (svg, use)
 import Svg.Styled.Attributes exposing (viewBox, xlinkHref)
+import Views.Icons as Icons
 
 
 link : (String -> msg) -> ( String, String ) -> Html msg
@@ -77,13 +78,13 @@ view navigate =
                     , position relative
                     ]
                 ]
-                [ svg [ Svg.Styled.Attributes.viewBox "0 0 1000 1000" ] [ use [ xlinkHref "#Logo" ] [] ]
+                [ Icons.logo
                 , h2
                     [ css
                         [ fontSize (Css.rem 1)
                         , position fixed
-                        , property "top" "calc(50% - 40vmin)"
-                        , property "right" "calc(50% - 40vmin)"
+                        , property "top" "calc(50% - 25vmin - 100px)"
+                        , property "right" "calc(50% - 25vmin - 100px)"
                         , width (px 160)
                         , lineHeight (num 1.4)
                         , textAlign center
