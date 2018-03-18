@@ -1,15 +1,25 @@
 module Views.Home exposing (..)
 
+import Time
 import Json.Decode as Decode
 import Css exposing (..)
 import Css.Media as Media
 import Html.Attributes exposing (style)
-import Html.Styled exposing (Html, text, div, img, h2, a, p)
+import Html.Styled exposing (Html, text, div, img, h2, a, p, fromUnstyled)
 import Html.Styled.Attributes exposing (class, css, src, href)
 import Html.Styled.Events exposing (onWithOptions)
 import Svg.Styled exposing (svg, use)
 import Svg.Styled.Attributes exposing (viewBox, xlinkHref)
 import Views.Icons as Icons
+import Views.Home.Bg
+import Window
+
+
+type alias Config msg =
+    { navigate : String -> msg
+    , window : Window.Size
+    , time : Time.Time
+    }
 
 
 link : (String -> msg) -> ( String, String ) -> Html msg
@@ -46,86 +56,82 @@ links =
     ]
 
 
-view : (String -> msg) -> Html msg
-view navigate =
+view : Config msg -> Html msg
+view config =
     div
         [ css
             [ width (pct 100)
-            , height (pct 100)
             , position absolute
-            , top (px 0)
-            , left (px 0)
-            , displayFlex
-            , alignItems center
-            , justifyContent center
-            , property "font-family" "Moon, sans-serif"
-            , color (hex "000000")
-            , property "z-index" "100"
+            , Css.top (px 0)
+            , Css.left (px 0)
+            , overflow hidden
+            , height (pct 100)
+            , backgroundColor (hex "ffc235")
             ]
         ]
         [ div
             [ css
-                [ textAlign center
-                , position relative
-                , padding (px 20)
+                [ width (pct 100)
+                , height (pct 100)
+                , position absolute
+                , top (px 0)
+                , left (px 0)
+                , displayFlex
+                , alignItems center
+                , justifyContent center
+                , property "font-family" "Moon, sans-serif"
+                , color (hex "000000")
+                , property "z-index" "100"
                 ]
             ]
             [ div
                 [ css
-                    [ width (px 150)
-                    , height (px 150)
-                    , margin auto
+                    [ textAlign center
                     , position relative
+                    , padding (px 20)
                     ]
                 ]
-                [ Icons.logo
-                , h2
+                [ div
                     [ css
-                        [ fontSize (Css.rem 1)
-                        , position fixed
-                        , property "top" "calc(50% - 25vmin - 100px)"
-                        , property "right" "calc(50% - 25vmin - 100px)"
-                        , width (px 160)
-                        , lineHeight (num 1.4)
-                        , textAlign center
-                        , letterSpacing (Css.rem 0.08)
-                        , property "transform" "rotateZ(+45deg)"
-                        , property "transform-origin" "center center"
-                        , fontWeight normal
+                        [ width (px 150)
+                        , height (px 150)
+                        , margin auto
+                        , position relative
                         ]
                     ]
-                    [ text "~ it's like computer art ~" ]
-                ]
-            , div
-                [ css
-                    [ maxWidth (px 640)
-                    , marginTop (px 40)
-                    , display none
-                    , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
-                        [ display block ]
+                    [ Icons.logo
+                    , h2
+                        [ css
+                            [ fontSize (Css.rem 1)
+                            , position fixed
+                            , property "top" "calc(50% - 25vmin - 100px)"
+                            , property "right" "calc(50% - 25vmin - 100px)"
+                            , width (px 160)
+                            , lineHeight (num 1.4)
+                            , textAlign center
+                            , letterSpacing (Css.rem 0.08)
+                            , property "transform" "rotateZ(+45deg)"
+                            , property "transform-origin" "center center"
+                            , fontWeight normal
+                            ]
+                        ]
+                        [ text "~ it's like computer art ~" ]
                     ]
-                ]
-                [ -- link navigate ( "/", "Next -->" ) ,
-                  div [] <| List.map (link navigate) links
+                , div
+                    [ css
+                        [ maxWidth (px 640)
+                        , marginTop (px 40)
+                        , display none
+                        , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
+                            [ display block ]
+                        ]
+                    ]
+                    [ -- link config.navigate ( "/", "Next -->" ) ,
+                      div [] <| List.map (link config.navigate) links
 
-                -- , link navigate ( "/", "<-- Previous" )
-                ]
-            , div
-                [ css
-                    [ maxWidth (px 640)
-                    , marginTop (px 40)
-                    , display block
-                    , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
-                        [ display none ]
+                    -- , link config.navigate ( "/", "<-- Previous" )
                     ]
-                ]
-                [ p
-                    [ css
-                        [ fontSize (Css.rem 1)
-                        , lineHeight (num 1.6)
-                        ]
-                    ]
-                    [ text "Some birds are not meant to be resized (as in OverEasy does not support mobile). Enjoy your train ride!" ]
                 ]
             ]
+        , Views.Home.Bg.view config.window config.time
         ]

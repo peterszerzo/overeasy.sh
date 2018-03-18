@@ -14,7 +14,7 @@ import String
 import Window
 import UrlParser exposing (..)
 import Views.Home
-import Views.Bg
+import Views.NoMobile
 
 
 type Route
@@ -134,40 +134,30 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    let
-        homeView =
-            div
-                [ css
-                    [ width (pct 100)
-                    , position absolute
-                    , Css.top (px 0)
-                    , Css.left (px 0)
-                    , overflow hidden
-                    , height (pct 100)
-                    , backgroundColor (hex "ffc235")
-                    ]
-                ]
-                [ Views.Home.view Navigate
-                , Views.Bg.view model.window (model.time - model.startTime) |> fromUnstyled
-                ]
-                |> toUnstyled
-    in
-        if model.window.width < 600 then
-            homeView
-        else
-            case model.route of
-                Home ->
-                    homeView
+    div [ css [ height (pct 100) ] ]
+        [ (case model.route of
+            Home ->
+                Views.Home.view
+                    { navigate = Navigate
+                    , window = model.window
+                    , time = model.time - model.startTime
+                    }
 
-                NotFound ->
-                    Html.text "Not found"
+            NotFound ->
+                Html.Styled.text "Not found"
 
-                ThisWayThatWay model ->
-                    Pieces.ThisWayThatWay.view model
-                        |> Html.map ThisWayThatWayMsg
+            ThisWayThatWay model ->
+                Pieces.ThisWayThatWay.view model
+                    |> Html.map ThisWayThatWayMsg
+                    |> fromUnstyled
 
-                MoreSimpleLessSimple model ->
-                    Pieces.MoreSimpleLessSimple.view model |> Html.map MoreSimpleLessSimpleMsg
+            MoreSimpleLessSimple model ->
+                Pieces.MoreSimpleLessSimple.view model
+                    |> Html.map MoreSimpleLessSimpleMsg
+                    |> fromUnstyled
+          )
+        ]
+        |> toUnstyled
 
 
 subscriptions : Model -> Sub Msg

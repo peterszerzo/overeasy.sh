@@ -1,9 +1,9 @@
-module Views.Bg exposing (..)
+module Views.Home.Bg exposing (..)
 
 import Time
-import Html exposing (Html)
 import Html.Attributes exposing (style)
 import Math.Vector2 as Vector2 exposing (Vec2, vec2)
+import Html.Styled exposing (Html, fromUnstyled)
 import WebGL
 import Window
 
@@ -43,6 +43,7 @@ view window time =
                 , time = time
                 }
             ]
+            |> fromUnstyled
 
 
 mesh : WebGL.Mesh Vertex
