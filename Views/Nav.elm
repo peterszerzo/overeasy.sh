@@ -21,7 +21,12 @@ view onClick =
             , left (px 20)
             , padding (px 12)
             , property "z-index" "102"
-            , backgroundColor (hex "ffc235")
+            , color (rgba 255 255 255 0.3)
+            , property "transition" "all 0.3s"
+            , hover
+                [ backgroundColor (hex "ffc235")
+                , color (hex "000")
+                ]
             ]
         , href "/"
         , onWithOptions "click"
