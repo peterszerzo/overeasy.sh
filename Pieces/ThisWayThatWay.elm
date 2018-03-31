@@ -1,6 +1,6 @@
 module Pieces.ThisWayThatWay exposing (..)
 
-import Html exposing (Html, Attribute, div)
+import Html exposing (Html, Attribute, div, program)
 import Html.Attributes exposing (class, style, width, height)
 import Math.Matrix4 as Matrix4
 import Math.Vector3 as Vector3 exposing (Vec3, vec3)
@@ -334,12 +334,13 @@ varying float brightness;
 varying vec2 vCoord;
 
 void main() {
-  const float pi = 3.14159265359;
-  const vec3 color1 = vec3();
+  float pi = 3.14159265359;
+
   brightness = 1.0 + (1.0 - dot(
     normalize(vec3(0.3, -0.2, 1)),
     normalize(vec3(normal))
   )) * 0.8;
+
   vCoord = vec2(
     polar.y / (2.0 * pi) + 0.5,
     polar.z / (1.0 * pi) + 0.5
@@ -372,3 +373,13 @@ void main() {
   );
 }
 |]
+
+
+main : Program Never Model Msg
+main =
+    program
+        { init = init
+        , update = update
+        , view = view
+        , subscriptions = subscriptions
+        }

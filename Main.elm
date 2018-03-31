@@ -15,6 +15,7 @@ import Window
 import UrlParser exposing (..)
 import Views.Home
 import Views.NoMobile
+import Views.Nav
 
 
 type Route
@@ -108,16 +109,6 @@ update msg model =
         StartTime time ->
             ( { model | startTime = time }, Cmd.none )
 
-        ThisWayThatWayMsg msg ->
-            case model.route of
-                ThisWayThatWay model_ ->
-                    ( { model | route = ThisWayThatWay (Pieces.ThisWayThatWay.update msg model_ |> Tuple.first) }
-                    , Pieces.ThisWayThatWay.update msg model_ |> Tuple.second |> Cmd.map ThisWayThatWayMsg
-                    )
-
-                _ ->
-                    ( model, Cmd.none )
-
         Navigate newPath ->
             ( model, Navigation.newUrl newPath )
 
@@ -131,11 +122,27 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        ThisWayThatWayMsg msg ->
+            case model.route of
+                ThisWayThatWay model_ ->
+                    ( { model | route = ThisWayThatWay (Pieces.ThisWayThatWay.update msg model_ |> Tuple.first) }
+                    , Pieces.ThisWayThatWay.update msg model_ |> Tuple.second |> Cmd.map ThisWayThatWayMsg
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 view : Model -> Html Msg
 view model =
-    div [ css [ height (pct 100) ] ]
-        [ (case model.route of
+    div
+        [ css [ height (pct 100) ]
+        ]
+        [ if model.route == Home then
+            text ""
+          else
+            Views.Nav.view (Navigate "/")
+        , (case model.route of
             Home ->
                 Views.Home.view
                     { navigate = Navigate

@@ -104,71 +104,17 @@ void main() {
   vec2 coord = st - vec2(0.5, 0.5);
   float angle = polarAngle(coord);
   vec4 color;
-  float wave1 = 0.030 * sin(5.0 * angle - time * 0.00015);
-  float wave2 = 0.010 * sin(2.0 * angle - time * 0.0006);
-  float wave3 = 0.035 * sin(5.0 * angle - time * 0.00015);
-  float wave4 = 0.005 * sin(3.0 * angle + time * 0.0003);
+  float wave1 = 0.030 * sin(5.0 * angle - time * 0.00012);
+  float wave2 = 0.004 * sin(2.0 * angle - time * 0.0006);
+  float wave3 = 0.035 * sin(5.0 * angle + 3.14159 / 1.25 - time * 0.00012);
+  float wave4 = 0.008 * sin(3.0 * angle + time * 0.0003);
   if (length(coord) < 0.28 + wave1 + wave2) {
     color = vec4(0.0, 0.0, 0.0, 0.0);
-  } else if (length(coord) < 0.32 + wave3 + wave4) {
-    color = vec4(0.0, 0.0, 0.0, 0.05);
+  } else if (length(coord) < 0.28 + wave3 + wave4) {
+    color = vec4(0.0, 0.0, 0.0, 0.02);
   } else {
-    color = vec4(0.0, 0.0, 0.0, 0.08);
+    color = vec4(0.0, 0.0, 0.0, 0.05);
   }
   gl_FragColor = color;
 }
 |]
-
-
-purlinFragmentShaderCode : String
-purlinFragmentShaderCode =
-    """
-#ifdef GL_ES
-precision mediump float;
-#endif
-
-uniform vec2 u_resolution;
-uniform vec2 u_mouse;
-uniform float u_time;
-
-float rand(float x) {
-  return fract(sin(x) * 43758.5453123);
-}
-
-float perlin(float x) {
-  float i = floor(x);  // integer
-  float f = fract(x);  // fraction
-  return mix(rand(i), rand(i + 1.0), smoothstep(0.,1.,f));
-}
-
-const float pi = 3.14159265358979323;
-
-void main() {
-  vec2 st = gl_FragCoord.xy/u_resolution.xy;
-
-  vec2 stc = st * 10.0;
-  vec2 ipos = floor(stc);
-  vec2 fpos = fract(stc);
-
-  vec2 fromCenter = st - vec2(0.5, 0.5);
-  float d = length(fromCenter);
-
-  float dot = dot(fromCenter / d, vec2(1.0, 0.0));
-
-  float angle = acos(dot);
-
-  if (fromCenter.y < 0.0) {
-    angle = 2.0 * pi - acos(dot);
-  } else {
-    angle = acos(dot);
-  }
-
-  float randomArgument = sin(8.0 * angle / pi + u_time / 6.0);
-
-  if (d < 0.22 + 0.12 * perlin(randomArgument)) {
-    discard;
-  } else {
-    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.04);
-  }
-}
-"""
