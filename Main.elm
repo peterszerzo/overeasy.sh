@@ -8,19 +8,17 @@ import Html exposing (Html)
 import Html.Styled exposing (fromUnstyled, toUnstyled, text, div, img)
 import Html.Styled.Attributes exposing (css)
 import Pieces.MoreSimpleLessSimple
-import Pieces.ThisWayThatWay
+import Pieces.BearingsAreFragile
 import Navigation
-import String
 import Window
 import UrlParser exposing (..)
 import Views.Home
-import Views.NoMobile
 import Views.Nav
 
 
 type Route
     = Home
-    | ThisWayThatWay Pieces.ThisWayThatWay.Model
+    | BearingsAreFragile Pieces.BearingsAreFragile.Model
     | MoreSimpleLessSimple Pieces.MoreSimpleLessSimple.Model
     | NotFound
 
@@ -37,14 +35,14 @@ matchers =
     oneOf
         [ s "" |> map Home
         , s "more-simple-less-simple" |> map (Pieces.MoreSimpleLessSimple.init |> Tuple.first |> MoreSimpleLessSimple)
-        , s "this-way-that-way" |> map (Pieces.ThisWayThatWay.init |> Tuple.first |> ThisWayThatWay)
+        , s "bearings-are-fragile" |> map (Pieces.BearingsAreFragile.init |> Tuple.first |> BearingsAreFragile)
         ]
 
 
 type Msg
     = ChangeRoute Route
     | Navigate String
-    | ThisWayThatWayMsg Pieces.ThisWayThatWay.Msg
+    | BearingsAreFragileMsg Pieces.BearingsAreFragile.Msg
     | MoreSimpleLessSimpleMsg Pieces.MoreSimpleLessSimple.Msg
     | Resize Window.Size
     | Tick Time.Time
@@ -62,8 +60,8 @@ type alias Model =
 routeInitCmd : Route -> Cmd Msg
 routeInitCmd route =
     case route of
-        ThisWayThatWay _ ->
-            Pieces.ThisWayThatWay.init |> Tuple.second |> Cmd.map ThisWayThatWayMsg
+        BearingsAreFragile _ ->
+            Pieces.BearingsAreFragile.init |> Tuple.second |> Cmd.map BearingsAreFragileMsg
 
         MoreSimpleLessSimple _ ->
             Pieces.MoreSimpleLessSimple.init |> Tuple.second |> Cmd.map MoreSimpleLessSimpleMsg
@@ -122,11 +120,11 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        ThisWayThatWayMsg msg ->
+        BearingsAreFragileMsg msg ->
             case model.route of
-                ThisWayThatWay model_ ->
-                    ( { model | route = ThisWayThatWay (Pieces.ThisWayThatWay.update msg model_ |> Tuple.first) }
-                    , Pieces.ThisWayThatWay.update msg model_ |> Tuple.second |> Cmd.map ThisWayThatWayMsg
+                BearingsAreFragile model_ ->
+                    ( { model | route = BearingsAreFragile (Pieces.BearingsAreFragile.update msg model_ |> Tuple.first) }
+                    , Pieces.BearingsAreFragile.update msg model_ |> Tuple.second |> Cmd.map BearingsAreFragileMsg
                     )
 
                 _ ->
@@ -153,9 +151,9 @@ view model =
             NotFound ->
                 Html.Styled.text "Not found"
 
-            ThisWayThatWay model ->
-                Pieces.ThisWayThatWay.view model
-                    |> Html.map ThisWayThatWayMsg
+            BearingsAreFragile model ->
+                Pieces.BearingsAreFragile.view model
+                    |> Html.map BearingsAreFragileMsg
                     |> fromUnstyled
 
             MoreSimpleLessSimple model ->
@@ -171,8 +169,8 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ case model.route of
-            ThisWayThatWay model ->
-                Pieces.ThisWayThatWay.subscriptions model |> Sub.map ThisWayThatWayMsg
+            BearingsAreFragile model ->
+                Pieces.BearingsAreFragile.subscriptions model |> Sub.map BearingsAreFragileMsg
 
             MoreSimpleLessSimple model ->
                 Pieces.MoreSimpleLessSimple.subscriptions model |> Sub.map MoreSimpleLessSimpleMsg

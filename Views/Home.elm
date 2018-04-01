@@ -3,13 +3,9 @@ module Views.Home exposing (..)
 import Time
 import Json.Decode as Decode
 import Css exposing (..)
-import Css.Media as Media
-import Html.Attributes exposing (style)
 import Html.Styled exposing (Html, text, div, img, h2, a, p, fromUnstyled)
 import Html.Styled.Attributes exposing (class, css, src, href)
 import Html.Styled.Events exposing (onWithOptions)
-import Svg.Styled exposing (svg, use)
-import Svg.Styled.Attributes exposing (viewBox, xlinkHref)
 import Views.Icons as Icons
 import Views.Home.Bg
 import Window
@@ -26,7 +22,11 @@ link : (String -> msg) -> ( String, String ) -> Html msg
 link navigate ( url, label ) =
     a
         [ href url
-        , onWithOptions "click" { preventDefault = True, stopPropagation = False } (navigate url |> Decode.succeed)
+        , onWithOptions "click"
+            { preventDefault = True
+            , stopPropagation = False
+            }
+            (navigate url |> Decode.succeed)
         , css
             [ textDecoration none
             , color inherit
@@ -49,7 +49,7 @@ link navigate ( url, label ) =
 links : List ( String, String )
 links =
     [ ( "/more-simple-less-simple", "1. More simple, less simple" )
-    , ( "", "2. This way, that way (..SOON..)" )
+    , ( "/bearings-are-fragile", "2. Bearings are fragile" )
     , ( "", "3. Bureaucracy is distracting" )
     , ( "", "4. Lemonade with mom and dad" )
     , ( "", "5. My sweet soothing tax id" )
@@ -121,9 +121,6 @@ view config =
                     [ css
                         [ maxWidth (px 640)
                         , marginTop (px 40)
-                        , display none
-                        , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
-                            [ display block ]
                         ]
                     ]
                     [ -- link config.navigate ( "/", "Next -->" ) ,

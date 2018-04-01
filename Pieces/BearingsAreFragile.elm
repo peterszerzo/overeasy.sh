@@ -1,34 +1,45 @@
-module Pieces.ThisWayThatWay exposing (..)
+module Pieces.BearingsAreFragile exposing (..)
 
+import Task
 import Html exposing (Html, Attribute, div, program)
 import Html.Attributes exposing (class, style, width, height)
 import Math.Matrix4 as Matrix4
 import Math.Vector3 as Vector3 exposing (Vec3, vec3)
 import Math.Vector2 as Vector2 exposing (Vec2, vec2)
 import WebGL
+import Window
 
 
 type alias Model =
-    {}
+    { window : Window.Size
+    }
 
 
 type Msg
-    = NoOp
+    = Resize Window.Size
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( {}, Cmd.none )
+    ( { window =
+            { width = 0
+            , height = 0
+            }
+      }
+    , Task.perform Resize Window.size
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        Resize window ->
+            ( { model | window = window }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Window.resizes Resize
 
 
 view : Model -> Html Msg
@@ -38,16 +49,16 @@ view model =
             12
 
         size =
-            800
+            max model.window.width model.window.height
 
         top =
-            200
+            (toFloat model.window.width - toFloat model.window.height) / 2 |> min 0
 
         left =
             -400
 
         scale =
-            size / 100
+            toFloat size / 100
 
         lat =
             0
@@ -68,15 +79,14 @@ view model =
     in
         div
             [ style
-                [ ( "width", "800px" )
-                , ( "height", "480px" )
-                , ( "border", "2px solid #000" )
-                , ( "background-color", "white" )
+                [ ( "background-color", "white" )
                 , ( "position", "absolute" )
-                , ( "top", "50%" )
-                , ( "left", "50%" )
                 , ( "overflow", "hidden" )
-                , ( "transform", "translate3d(-50%, -50%, 0)" )
+                , ( "top", "0px" )
+                , ( "left", "0px" )
+                , ( "width", "100vw" )
+                , ( "height", "100vh" )
+                , ( "background-color", "#0F1108" )
                 ]
             ]
             [ WebGL.toHtmlWith
@@ -84,12 +94,15 @@ view model =
                 , WebGL.depth 1
                 , WebGL.antialias
                 ]
-                [ width (floor size)
-                , height (floor size)
+                [ width size
+                , height size
                 , style
                     [ ( "position", "absolute" )
-                    , ( "top", "-" ++ ((toString << floor) top) ++ "px" )
-                    , ( "left", "-" ++ ((toString << floor) left) ++ "px" )
+                    , ( "top", "50%" )
+                    , ( "left", "50%" )
+                    , ( "transform", "translate3d(-50%, -50%, 0)" )
+                    , ( "width", (toString size) ++ "px" )
+                    , ( "height", (toString size) ++ "px" )
                     ]
                 ]
                 [ globeEntity perspective
@@ -361,16 +374,16 @@ varying float brightness;
 varying vec2 vCoord;
 
 void main() {
-  vec4 color1 = vec4(235.0 / 255.0, 183.0 / 255.0, 73.0 / 255.0);
-  vec4 color2 = vec4(60.0 / 255.0, 50.0 / 255.0, 79.0 / 255.0);
-  vec4 color = vec4(0.5, 0.3, 0.1, 1.0);
-  float luminosity = 0.21 * color.r + 0.72 * color.g + 0.07 * color.b;
+  vec4 color1 = vec4(0.0 / 255.0, 50.0 / 255.0, 73.0 / 255.0, 1.0);
+  vec4 color2 = vec4(55.0 / 255.0, 63.0 / 255.0, 81.0 / 255.0, 1.0);
+  float luminosity = 0.21 * color1.r + 0.72 * color1.g + 0.07 * color1.b;
   gl_FragColor = vec4(
     luminosity * brightness,
     luminosity * brightness,
     luminosity * brightness,
     1.0
   );
+  gl_FragColor = color1 * brightness;
 }
 |]
 
