@@ -48,12 +48,27 @@ link navigate ( url, label ) =
 
 links : List ( String, String )
 links =
-    [ ( "/more-simple-less-simple", "1. More simple, less simple" )
-    , ( "/bearings-are-fragile", "2. Bearings are fragile" )
-    , ( "", "3. Bureaucracy is distracting" )
-    , ( "", "4. Lemonade with mom and dad" )
-    , ( "", "5. My sweet soothing tax id" )
+    [ ( "/more-simple-less-simple", "1. more-simple-less-simple" )
+    , ( "/our-bearings-are-fragile", "2. our-bearings-are-fragile" )
+    , ( "", "3. bureaucracy-is-distracting" )
+    , ( "", "4. my-sweet-soothing-tax-id" )
+    , ( "", "5. moebius-racer" )
     ]
+
+
+tiltedSubtitleStyle : Style
+tiltedSubtitleStyle =
+    Css.batch
+        [ fontSize (Css.rem 1)
+        , position fixed
+        , property "top" "calc(50% - 12vmin - 180px)"
+        , width (px 180)
+        , lineHeight (num 1.4)
+        , textAlign center
+        , letterSpacing (Css.rem 0.08)
+        , property "transform-origin" "center center"
+        , fontWeight normal
+        ]
 
 
 view : Config msg -> Html msg
@@ -102,20 +117,31 @@ view config =
                     [ Icons.logo
                     , h2
                         [ css
-                            [ fontSize (Css.rem 1)
-                            , position fixed
-                            , property "top" "calc(50% - 25vmin - 100px)"
-                            , property "right" "calc(50% - 25vmin - 100px)"
-                            , width (px 160)
-                            , lineHeight (num 1.4)
-                            , textAlign center
-                            , letterSpacing (Css.rem 0.08)
-                            , property "transform" "rotateZ(+45deg)"
-                            , property "transform-origin" "center center"
-                            , fontWeight normal
+                            [ tiltedSubtitleStyle
+                            , property "left" "calc(50% - 25vmin - 100px)"
+                            , property "transform" "rotateZ(-45deg)"
                             ]
                         ]
                         [ text "~ it's like computer art ~" ]
+                    , h2
+                        [ css
+                            [ tiltedSubtitleStyle
+                            , property "right" "calc(50% - 25vmin - 100px)"
+                            , property "transform" "rotateZ(+45deg)"
+                            ]
+                        ]
+                        [ text "~ a silly scramble from "
+                        , a
+                            [ css
+                                [ textDecoration none
+                                , color inherit
+                                , borderBottom3 (px 1) solid currentColor
+                                ]
+                            , href "http://peterszerzo.com"
+                            ]
+                            [ text "peter" ]
+                        , text " ~"
+                        ]
                     ]
                 , div
                     [ css

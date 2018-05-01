@@ -1,22 +1,32 @@
-module Pieces.BearingsAreFragile exposing (..)
+module Pieces.OurBearingsAreFragile exposing (..)
 
 import Task
+import Time
+import Random
+import AnimationFrame
 import Html exposing (Html, Attribute, div, program)
 import Html.Attributes exposing (class, style, width, height)
+import Svg exposing (svg, path)
+import Svg.Attributes exposing (viewBox, d, fill)
 import Math.Matrix4 as Matrix4
 import Math.Vector3 as Vector3 exposing (Vec3, vec3)
-import Math.Vector2 as Vector2 exposing (Vec2, vec2)
 import WebGL
 import Window
+import Concepts.Icosahedron as Icosahedron
 
 
 type alias Model =
     { window : Window.Size
+    , time : Time.Time
+    , startTime : Time.Time
+    , starPositions : List ( Float, Float )
     }
 
 
 type Msg
     = Resize Window.Size
+    | Tick Time.Time
+    | StarPositions (List ( Float, Float ))
 
 
 init : ( Model, Cmd Msg )
@@ -25,9 +35,20 @@ init =
             { width = 0
             , height = 0
             }
+      , time = 0
+      , startTime = 0
+      , starPositions = []
       }
-    , Task.perform Resize Window.size
+    , Cmd.batch
+        [ Task.perform Resize Window.size
+        , Random.generate StarPositions generateStarPositions
+        ]
     )
+
+
+generateStarPositions : Random.Generator (List ( Float, Float ))
+generateStarPositions =
+    Random.list 360 (Random.pair (Random.float 0 1) (Random.float 0 1))
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -36,10 +57,41 @@ update msg model =
         Resize window ->
             ( { model | window = window }, Cmd.none )
 
+        Tick time ->
+            ( { model
+                | startTime =
+                    if model.startTime == 0 then
+                        time
+                    else
+                        model.startTime
+                , time = time
+              }
+            , Cmd.none
+            )
+
+        StarPositions starPositions ->
+            ( { model | starPositions = starPositions }, Cmd.none )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Window.resizes Resize
+    Sub.batch
+        [ Window.resizes Resize
+        , AnimationFrame.times Tick
+        ]
+
+
+star : Html msg
+star =
+    svg [ Svg.Attributes.width "8", Svg.Attributes.height "8", viewBox "0 0 100 100" ]
+        [ path
+            [ d "M20,50 L40,40 L50,20 L60,40 L80,50 L60,60 L50,80 L40,60 M20,20"
+
+            --, fill "#ffc235"
+            , fill "#FFFFFF"
+            ]
+            []
+        ]
 
 
 view : Model -> Html Msg
@@ -56,26 +108,6 @@ view model =
 
         left =
             -400
-
-        scale =
-            toFloat size / 100
-
-        lat =
-            0
-
-        lng =
-            0
-
-        eye =
-            vec3
-                (sin lng * cos lat)
-                (cos lng * cos lat)
-                (sin lat)
-                |> Vector3.scale (10 * zoom)
-
-        perspective =
-            Matrix4.mul (Matrix4.makePerspective 45 1 0.01 100)
-                (Matrix4.makeLookAt eye (vec3 0 0 0) (vec3 0 0 1))
     in
         div
             [ style
@@ -89,7 +121,7 @@ view model =
                 , ( "background-color", "#0F1108" )
                 ]
             ]
-            [ WebGL.toHtmlWith
+            (WebGL.toHtmlWith
                 [ WebGL.alpha True
                 , WebGL.depth 1
                 , WebGL.antialias
@@ -103,11 +135,27 @@ view model =
                     , ( "transform", "translate3d(-50%, -50%, 0)" )
                     , ( "width", (toString size) ++ "px" )
                     , ( "height", (toString size) ++ "px" )
+                    , ( "z-index", "10" )
                     ]
                 ]
-                [ globeEntity perspective
+                [ globeEntity (model.time - model.startTime)
                 ]
-            ]
+                :: (List.map
+                        (\( x, y ) ->
+                            div
+                                [ style
+                                    [ ( "position", "absolute" )
+                                    , ( "opacity", "0.4" )
+                                    , ( "top", ((toFloat size) * x |> toString) ++ "px" )
+                                    , ( "left", ((toFloat size) * y |> toString) ++ "px" )
+                                    , ( "z-index", "9" )
+                                    ]
+                                ]
+                                [ star ]
+                        )
+                        model.starPositions
+                   )
+            )
 
 
 
@@ -116,8 +164,10 @@ view model =
 
 type alias Vertex =
     { normal : Vec3
-    , polar : Vec3
+    , center : Vec3
+    , polarCenter : Vec3
     , position : Vec3
+    , polar : Vec3
     }
 
 
@@ -129,140 +179,17 @@ type alias Uniforms =
 
 type alias Varyings =
     { brightness : Float
-    , vCoord : Vec2
     }
 
 
-globeEntity : Matrix4.Mat4 -> WebGL.Entity
-globeEntity perspective =
+globeEntity : Time.Time -> WebGL.Entity
+globeEntity time =
     WebGL.entity vertexShader
         fragmentShader
         mesh
-        { perspective = globePerspective
-        , time = 0
+        { perspective = globePerspective time
+        , time = time
         }
-
-
-subdivide : Int -> ( Vec3, Vec3, Vec3 ) -> List ( Vec3, Vec3, Vec3 )
-subdivide no ( pt1, pt2, pt3 ) =
-    case no of
-        0 ->
-            [ ( pt1, pt2, pt3 ) ]
-
-        _ ->
-            let
-                r =
-                    Vector3.length pt1
-
-                m12_ =
-                    Vector3.add pt1 pt2 |> Vector3.scale 0.5
-
-                m23_ =
-                    Vector3.add pt2 pt3 |> Vector3.scale 0.5
-
-                m31_ =
-                    Vector3.add pt3 pt1 |> Vector3.scale 0.5
-
-                m12 =
-                    Vector3.scale (r / (Vector3.length m12_)) m12_
-
-                m23 =
-                    Vector3.scale (r / (Vector3.length m23_)) m23_
-
-                m31 =
-                    Vector3.scale (r / (Vector3.length m31_)) m31_
-            in
-                [ subdivide (no - 1) ( pt1, m12, m31 )
-                , subdivide (no - 1) ( m12, pt2, m23 )
-                , subdivide (no - 1) ( m12, m23, m31 )
-                , subdivide (no - 1) ( m31, m23, pt3 )
-                ]
-                    |> List.foldl (++) []
-
-
-icosahedron : List ( Vec3, Vec3, Vec3 )
-icosahedron =
-    [ ( vec3 -1.0 0.0 -1.618
-      , vec3 -1.618 -1.0 0.0
-      , vec3 -1.618 1.0 0.0
-      )
-    , ( vec3 -1.0 0.0 -1.618
-      , vec3 -1.618 1.0 0.0
-      , vec3 0.0 1.618 -1.0
-      )
-    , ( vec3 -1.0 0.0 -1.618
-      , vec3 0.0 1.618 -1.0
-      , vec3 1.0 0.0 -1.618
-      )
-    , ( vec3 -1.0 0.0 -1.618
-      , vec3 0.0 -1.618 -1.0
-      , vec3 1.0 0.0 -1.618
-      )
-    , ( vec3 -1.0 0.0 -1.618
-      , vec3 -1.618 -1.0 0.0
-      , vec3 0.0 -1.618 -1.0
-      )
-    , ( vec3 0.0 -1.618 -1.0
-      , vec3 1.0 0.0 -1.618
-      , vec3 1.618 -1.0 0.0
-      )
-    , ( vec3 1.0 0.0 -1.618
-      , vec3 0.0 1.618 -1.0
-      , vec3 1.618 1.0 0.0
-      )
-    , ( vec3 1.618 -1.0 0.0
-      , vec3 1.0 0.0 -1.618
-      , vec3 1.618 1.0 0.0
-      )
-    , ( vec3 0.0 1.618 -1.0
-      , vec3 -1.618 1.0 0.0
-      , vec3 0.0 1.618 1.0
-      )
-    , ( vec3 1.618 1.0 0.0
-      , vec3 0.0 1.618 -1.0
-      , vec3 0.0 1.618 1.0
-      )
-    , ( vec3 1.618 1.0 0.0
-      , vec3 0.0 1.618 1.0
-      , vec3 1.0 0.0 1.618
-      )
-    , ( vec3 1.618 -1.0 0.0
-      , vec3 1.618 1.0 0.0
-      , vec3 1.0 0.0 1.618
-      )
-    , ( vec3 0.0 -1.618 -1.0
-      , vec3 1.618 -1.0 0.0
-      , vec3 0.0 -1.618 1.0
-      )
-    , ( vec3 0.0 -1.618 1.0
-      , vec3 1.618 -1.0 0.0
-      , vec3 1.0 0.0 1.618
-      )
-    , ( vec3 -1.618 -1.0 0.0
-      , vec3 0.0 -1.618 -1.0
-      , vec3 0.0 -1.618 1.0
-      )
-    , ( vec3 -1.0 0.0 1.618
-      , vec3 -1.618 -1.0 0.0
-      , vec3 0.0 -1.618 1.0
-      )
-    , ( vec3 -1.618 1.0 0.0
-      , vec3 -1.618 -1.0 0.0
-      , vec3 -1.0 0.0 1.618
-      )
-    , ( vec3 0.0 1.618 1.0
-      , vec3 -1.618 1.0 0.0
-      , vec3 -1.0 0.0 1.618
-      )
-    , ( vec3 1.0 0.0 1.618
-      , vec3 0.0 1.618 1.0
-      , vec3 -1.0 0.0 1.618
-      )
-    , ( vec3 -1.0 0.0 1.618
-      , vec3 0.0 -1.618 1.0
-      , vec3 1.0 0.0 1.618
-      )
-    ]
 
 
 floatRem : Float -> Float -> Float
@@ -276,14 +203,17 @@ type alias Polygon =
     }
 
 
-globePerspective : Matrix4.Mat4
-globePerspective =
+globePerspective : Time.Time -> Matrix4.Mat4
+globePerspective time =
     let
+        sineTime =
+            sin (time / 1800)
+
         theta =
-            pi / 3
+            -pi / 3 + pi / 100 * sineTime
 
         phi =
-            pi / 2 - pi / 4
+            3 * pi / 8 + pi / 100 * sineTime
 
         eye =
             vec3
@@ -293,22 +223,25 @@ globePerspective =
                 |> Vector3.scale 10
     in
         Matrix4.mul (Matrix4.makePerspective 45 1 0.01 100)
-            (Matrix4.makeLookAt eye (vec3 0 0 0) (vec3 0 0 1))
+            (Matrix4.makeLookAt eye (vec3 0 0 0.6) (vec3 0 0 1))
 
 
 rawTriangleToVertexTriangle : ( Vec3, Vec3, Vec3 ) -> ( Vertex, Vertex, Vertex )
 rawTriangleToVertexTriangle ( pt1, pt2, pt3 ) =
     let
+        center =
+            List.foldl Vector3.add (vec3 0 0 0) [ pt1, pt2, pt3 ] |> Vector3.scale (1.0 / 3.0)
+
         normal =
             Vector3.cross (Vector3.sub pt2 pt1) (Vector3.sub pt3 pt1) |> Vector3.normalize
     in
-        ( Vertex normal (toPolar pt1) pt1
-        , Vertex normal (toPolar pt2) pt2
-        , Vertex normal (toPolar pt3) pt3
+        ( { normal = normal, center = center, polarCenter = toPolar center, polar = (toPolar pt1), position = pt1 }
+        , { normal = normal, center = center, polarCenter = toPolar center, polar = (toPolar pt2), position = pt2 }
+        , { normal = normal, center = center, polarCenter = toPolar center, polar = (toPolar pt3), position = pt3 }
         )
 
 
-{-| vec3 x y z -> vec3 radius theta pi
+{-| vec3 x y z -> vec3 radius theta phi
 -}
 toPolar : Vec3 -> Vec3
 toPolar v =
@@ -332,34 +265,54 @@ mesh : WebGL.Mesh Vertex
 mesh =
     List.map
         rawTriangleToVertexTriangle
-        (List.map (subdivide 3) icosahedron |> List.foldl (++) [])
+        (List.map (Icosahedron.subdivide 4) Icosahedron.icosahedron |> List.foldl (++) [])
         |> WebGL.triangles
 
 
 vertexShader : WebGL.Shader Vertex Uniforms Varyings
 vertexShader =
     [glsl|
+precision mediump float;
+
 attribute vec3 position;
+attribute vec3 polarCenter;
+attribute vec3 center;
 attribute vec3 normal;
 attribute vec3 polar;
+
 uniform mat4 perspective;
+uniform float time;
 varying float brightness;
-varying vec2 vCoord;
 
 void main() {
   float pi = 3.14159265359;
 
+  float radius = distance(center, vec3(0.0, 0.0, 1.89));
+
+  float thetaCenter = polarCenter.y;
+
+  float breakRadius1 = 0.8 + 0.12 * (sin(thetaCenter * 3.0 - time / 1800.0)) + 0.06 * (sin(thetaCenter * 5.0 + 0.3 + time / 1800.0));
+
+  float breakRadius2 = breakRadius1 + 0.8;
+
+  float ratio;
+
+  if (radius > breakRadius2) {
+    ratio = 0.0;
+  } else if (radius > breakRadius1) {
+    ratio = (breakRadius2 - radius) / (breakRadius2 - breakRadius1);
+  } else {
+    ratio = 1.0;
+  }
+
+  vec3 newPosition = center + (position - center) * ratio;
+
   brightness = 1.0 + (1.0 - dot(
     normalize(vec3(0.3, -0.2, 1)),
     normalize(vec3(normal))
-  )) * 0.8;
+  )) * ratio * ratio;
 
-  vCoord = vec2(
-    polar.y / (2.0 * pi) + 0.5,
-    polar.z / (1.0 * pi) + 0.5
-  );
-
-  gl_Position = perspective * vec4(position, 1.0);
+  gl_Position = perspective * vec4(newPosition, 1.0);
 }
 |]
 
@@ -371,7 +324,6 @@ precision mediump float;
 
 uniform float time;
 varying float brightness;
-varying vec2 vCoord;
 
 void main() {
   vec4 color1 = vec4(0.0 / 255.0, 50.0 / 255.0, 73.0 / 255.0, 1.0);

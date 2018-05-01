@@ -4,11 +4,12 @@ import Time
 import Task
 import AnimationFrame
 import Css exposing (..)
+import Css.Foreign as Foreign
 import Html exposing (Html)
 import Html.Styled exposing (fromUnstyled, toUnstyled, text, div, img)
 import Html.Styled.Attributes exposing (css)
 import Pieces.MoreSimpleLessSimple
-import Pieces.BearingsAreFragile
+import Pieces.OurBearingsAreFragile
 import Navigation
 import Window
 import UrlParser exposing (..)
@@ -18,7 +19,7 @@ import Views.Nav
 
 type Route
     = Home
-    | BearingsAreFragile Pieces.BearingsAreFragile.Model
+    | OurBearingsAreFragile Pieces.OurBearingsAreFragile.Model
     | MoreSimpleLessSimple Pieces.MoreSimpleLessSimple.Model
     | NotFound
 
@@ -35,14 +36,14 @@ matchers =
     oneOf
         [ s "" |> map Home
         , s "more-simple-less-simple" |> map (Pieces.MoreSimpleLessSimple.init |> Tuple.first |> MoreSimpleLessSimple)
-        , s "bearings-are-fragile" |> map (Pieces.BearingsAreFragile.init |> Tuple.first |> BearingsAreFragile)
+        , s "our-bearings-are-fragile" |> map (Pieces.OurBearingsAreFragile.init |> Tuple.first |> OurBearingsAreFragile)
         ]
 
 
 type Msg
     = ChangeRoute Route
     | Navigate String
-    | BearingsAreFragileMsg Pieces.BearingsAreFragile.Msg
+    | BearingsAreFragileMsg Pieces.OurBearingsAreFragile.Msg
     | MoreSimpleLessSimpleMsg Pieces.MoreSimpleLessSimple.Msg
     | Resize Window.Size
     | Tick Time.Time
@@ -60,8 +61,8 @@ type alias Model =
 routeInitCmd : Route -> Cmd Msg
 routeInitCmd route =
     case route of
-        BearingsAreFragile _ ->
-            Pieces.BearingsAreFragile.init |> Tuple.second |> Cmd.map BearingsAreFragileMsg
+        OurBearingsAreFragile _ ->
+            Pieces.OurBearingsAreFragile.init |> Tuple.second |> Cmd.map BearingsAreFragileMsg
 
         MoreSimpleLessSimple _ ->
             Pieces.MoreSimpleLessSimple.init |> Tuple.second |> Cmd.map MoreSimpleLessSimpleMsg
@@ -122,9 +123,9 @@ update msg model =
 
         BearingsAreFragileMsg msg ->
             case model.route of
-                BearingsAreFragile model_ ->
-                    ( { model | route = BearingsAreFragile (Pieces.BearingsAreFragile.update msg model_ |> Tuple.first) }
-                    , Pieces.BearingsAreFragile.update msg model_ |> Tuple.second |> Cmd.map BearingsAreFragileMsg
+                OurBearingsAreFragile model_ ->
+                    ( { model | route = OurBearingsAreFragile (Pieces.OurBearingsAreFragile.update msg model_ |> Tuple.first) }
+                    , Pieces.OurBearingsAreFragile.update msg model_ |> Tuple.second |> Cmd.map BearingsAreFragileMsg
                     )
 
                 _ ->
@@ -134,9 +135,25 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div
-        [ css [ height (pct 100) ]
+        [ css
+            [ height (pct 100)
+            ]
         ]
-        [ if model.route == Home then
+        [ Foreign.global
+            [ Foreign.each
+                [ Foreign.body
+                , Foreign.html
+                ]
+                [ width (pct 100)
+                , height (pct 100)
+                , padding (px 0)
+                , margin (px 0)
+                ]
+            , Foreign.body
+                [ backgroundColor (hex "000")
+                ]
+            ]
+        , if model.route == Home then
             text ""
           else
             Views.Nav.view (Navigate "/")
@@ -151,8 +168,8 @@ view model =
             NotFound ->
                 Html.Styled.text "Not found"
 
-            BearingsAreFragile model ->
-                Pieces.BearingsAreFragile.view model
+            OurBearingsAreFragile model ->
+                Pieces.OurBearingsAreFragile.view model
                     |> Html.map BearingsAreFragileMsg
                     |> fromUnstyled
 
@@ -169,8 +186,8 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ case model.route of
-            BearingsAreFragile model ->
-                Pieces.BearingsAreFragile.subscriptions model |> Sub.map BearingsAreFragileMsg
+            OurBearingsAreFragile model ->
+                Pieces.OurBearingsAreFragile.subscriptions model |> Sub.map BearingsAreFragileMsg
 
             MoreSimpleLessSimple model ->
                 Pieces.MoreSimpleLessSimple.subscriptions model |> Sub.map MoreSimpleLessSimpleMsg
