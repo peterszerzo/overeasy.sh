@@ -10,6 +10,7 @@ import Svg exposing (svg, path)
 import Svg.Attributes exposing (viewBox, d, fill)
 import Math.Matrix4 as Matrix4
 import Math.Vector3 as Vector3 exposing (Vec3, vec3)
+import Math.Vector4 as Vector4 exposing (Vec4, vec4)
 import WebGL
 import Window
 import Concepts.Icosahedron as Icosahedron
@@ -179,6 +180,7 @@ type alias Uniforms =
 
 type alias Varyings =
     { brightness : Float
+    , baseColor : Vec4
     }
 
 
@@ -220,7 +222,7 @@ globePerspective time =
                 (sin theta * cos phi)
                 (cos theta * cos phi)
                 (sin phi)
-                |> Vector3.scale 10
+                |> Vector3.scale 9
     in
         Matrix4.mul (Matrix4.makePerspective 45 1 0.01 100)
             (Matrix4.makeLookAt eye (vec3 0 0 0.6) (vec3 0 0 1))
@@ -283,6 +285,24 @@ attribute vec3 polar;
 uniform mat4 perspective;
 uniform float time;
 varying float brightness;
+varying vec4 baseColor;
+
+float getSplitRatio(float radius, float breakRadius1, float breakRadius2) {
+  if (radius > breakRadius2) {
+    return 0.0;
+  }
+  if (radius > breakRadius1) {
+    return (breakRadius2 - radius) / (breakRadius2 - breakRadius1);
+  }
+  return 1.0;
+}
+
+float getColorRatio(float radius, float breakRadius1, float breakRadius2) {
+  if (radius > breakRadius2) {
+    return 0.0;
+  }
+  return (breakRadius2 - radius) / breakRadius2;
+}
 
 void main() {
   float pi = 3.14159265359;
@@ -295,22 +315,21 @@ void main() {
 
   float breakRadius2 = breakRadius1 + 0.8;
 
-  float ratio;
+  float splitRatio = getSplitRatio(radius, breakRadius1, breakRadius2);
 
-  if (radius > breakRadius2) {
-    ratio = 0.0;
-  } else if (radius > breakRadius1) {
-    ratio = (breakRadius2 - radius) / (breakRadius2 - breakRadius1);
-  } else {
-    ratio = 1.0;
-  }
+  float colorRatio = getColorRatio(radius, breakRadius1, breakRadius2);
 
-  vec3 newPosition = center + (position - center) * ratio;
+  vec3 newPosition = center + (position - center) * splitRatio;
+
+  vec4 color1 = vec4(0.0 / 255.0, 73.0 / 255.0, 107.0 / 255.0, 1.0);
+  vec4 color2 = vec4(38.0 / 255.0, 18.0 / 255.0, 32.0 / 255.0, 1.0);
+
+  baseColor = colorRatio * color1 + (1.0 - colorRatio) * color2;
 
   brightness = 1.0 + (1.0 - dot(
     normalize(vec3(0.3, -0.2, 1)),
     normalize(vec3(normal))
-  )) * ratio * ratio;
+  ));
 
   gl_Position = perspective * vec4(newPosition, 1.0);
 }
@@ -324,18 +343,17 @@ precision mediump float;
 
 uniform float time;
 varying float brightness;
+varying vec4 baseColor;
 
 void main() {
-  vec4 color1 = vec4(0.0 / 255.0, 50.0 / 255.0, 73.0 / 255.0, 1.0);
-  vec4 color2 = vec4(55.0 / 255.0, 63.0 / 255.0, 81.0 / 255.0, 1.0);
-  float luminosity = 0.21 * color1.r + 0.72 * color1.g + 0.07 * color1.b;
+  float luminosity = 0.21 * baseColor.r + 0.72 * baseColor.g + 0.07 * baseColor.b;
   gl_FragColor = vec4(
     luminosity * brightness,
     luminosity * brightness,
     luminosity * brightness,
     1.0
   );
-  gl_FragColor = color1 * brightness;
+  gl_FragColor = baseColor * brightness;
 }
 |]
 

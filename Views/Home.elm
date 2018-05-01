@@ -146,7 +146,7 @@ view config =
                 , div
                     [ css
                         [ maxWidth (px 640)
-                        , marginTop (px 40)
+                        , marginTop (px 20)
                         ]
                     ]
                     [ -- link config.navigate ( "/", "Next -->" ) ,
