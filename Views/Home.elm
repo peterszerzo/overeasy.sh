@@ -50,7 +50,7 @@ links : List ( String, String )
 links =
     [ ( "/more-simple-less-simple", "1. more-simple-less-simple" )
     , ( "/our-bearings-are-fragile", "2. our-bearings-are-fragile" )
-    , ( "", "3. bureaucracy-is-distracting" )
+    , ( "/bureaucracy-is-distracting", "3. bureaucracy-is-distracting" )
     , ( "", "4. my-sweet-soothing-tax-id" )
     , ( "", "5. moebius-racer" )
     ]
@@ -60,8 +60,8 @@ tiltedSubtitleStyle : Style
 tiltedSubtitleStyle =
     Css.batch
         [ fontSize (Css.rem 1)
-        , position fixed
-        , property "top" "calc(50% - 12vmin - 180px)"
+        , position absolute
+        , top (px -50)
         , width (px 180)
         , lineHeight (num 1.4)
         , textAlign center
@@ -118,7 +118,7 @@ view config =
                     , h2
                         [ css
                             [ tiltedSubtitleStyle
-                            , property "left" "calc(50% - 25vmin - 100px)"
+                            , left (px -130)
                             , property "transform" "rotateZ(-45deg)"
                             ]
                         ]
@@ -126,7 +126,7 @@ view config =
                     , h2
                         [ css
                             [ tiltedSubtitleStyle
-                            , property "right" "calc(50% - 25vmin - 100px)"
+                            , right (px -130)
                             , property "transform" "rotateZ(+45deg)"
                             ]
                         ]

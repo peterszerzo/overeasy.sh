@@ -10,6 +10,7 @@ import Html.Styled exposing (fromUnstyled, toUnstyled, text, div, img)
 import Html.Styled.Attributes exposing (css)
 import Pieces.MoreSimpleLessSimple
 import Pieces.OurBearingsAreFragile
+import Pieces.BureaucracyIsDistracting
 import Navigation
 import Window
 import UrlParser exposing (..)
@@ -21,6 +22,7 @@ type Route
     = Home
     | OurBearingsAreFragile Pieces.OurBearingsAreFragile.Model
     | MoreSimpleLessSimple Pieces.MoreSimpleLessSimple.Model
+    | BureaucracyIsDistracting Pieces.BureaucracyIsDistracting.Model
     | NotFound
 
 
@@ -37,6 +39,7 @@ matchers =
         [ s "" |> map Home
         , s "more-simple-less-simple" |> map (Pieces.MoreSimpleLessSimple.init |> Tuple.first |> MoreSimpleLessSimple)
         , s "our-bearings-are-fragile" |> map (Pieces.OurBearingsAreFragile.init |> Tuple.first |> OurBearingsAreFragile)
+        , s "bureaucracy-is-distracting" |> map (Pieces.BureaucracyIsDistracting.init |> Tuple.first |> BureaucracyIsDistracting)
         ]
 
 
@@ -45,6 +48,7 @@ type Msg
     | Navigate String
     | BearingsAreFragileMsg Pieces.OurBearingsAreFragile.Msg
     | MoreSimpleLessSimpleMsg Pieces.MoreSimpleLessSimple.Msg
+    | BureaucracyIsDistractingMsg Pieces.BureaucracyIsDistracting.Msg
     | Resize Window.Size
     | Tick Time.Time
     | StartTime Time.Time
@@ -66,6 +70,9 @@ routeInitCmd route =
 
         MoreSimpleLessSimple _ ->
             Pieces.MoreSimpleLessSimple.init |> Tuple.second |> Cmd.map MoreSimpleLessSimpleMsg
+
+        BureaucracyIsDistracting _ ->
+            Pieces.BureaucracyIsDistracting.init |> Tuple.second |> Cmd.map BureaucracyIsDistractingMsg
 
         _ ->
             Cmd.none
@@ -131,6 +138,16 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        BureaucracyIsDistractingMsg msg ->
+            case model.route of
+                BureaucracyIsDistracting model_ ->
+                    ( { model | route = BureaucracyIsDistracting (Pieces.BureaucracyIsDistracting.update msg model_ |> Tuple.first) }
+                    , Pieces.BureaucracyIsDistracting.update msg model_ |> Tuple.second |> Cmd.map BureaucracyIsDistractingMsg
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 view : Model -> Html Msg
 view model =
@@ -177,6 +194,11 @@ view model =
                 Pieces.MoreSimpleLessSimple.view model
                     |> Html.map MoreSimpleLessSimpleMsg
                     |> fromUnstyled
+
+            BureaucracyIsDistracting model ->
+                Pieces.BureaucracyIsDistracting.view model
+                    |> Html.map BureaucracyIsDistractingMsg
+                    |> fromUnstyled
           )
         ]
         |> toUnstyled
@@ -191,6 +213,9 @@ subscriptions model =
 
             MoreSimpleLessSimple model ->
                 Pieces.MoreSimpleLessSimple.subscriptions model |> Sub.map MoreSimpleLessSimpleMsg
+
+            BureaucracyIsDistracting model ->
+                Pieces.BureaucracyIsDistracting.subscriptions model |> Sub.map BureaucracyIsDistractingMsg
 
             _ ->
                 Sub.none

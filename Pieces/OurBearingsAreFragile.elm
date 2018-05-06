@@ -82,14 +82,16 @@ subscriptions model =
         ]
 
 
-star : Html msg
-star =
-    svg [ Svg.Attributes.width "8", Svg.Attributes.height "8", viewBox "0 0 100 100" ]
+star : Int -> Html msg
+star size =
+    svg
+        [ Svg.Attributes.width (toString size)
+        , Svg.Attributes.height (toString size)
+        , viewBox "0 0 100 100"
+        ]
         [ path
             [ d "M20,50 L40,40 L50,20 L60,40 L80,50 L60,60 L50,80 L40,60 M20,20"
-
-            --, fill "#ffc235"
-            , fill "#FFFFFF"
+            , fill "#AEAEAE"
             ]
             []
         ]
@@ -102,24 +104,20 @@ view model =
             12
 
         size =
-            max model.window.width model.window.height
+            max model.window.width model.window.height + 240
 
         top =
             (toFloat model.window.width - toFloat model.window.height) / 2 |> min 0
-
-        left =
-            -400
     in
         div
             [ style
-                [ ( "background-color", "white" )
-                , ( "position", "absolute" )
+                [ ( "position", "absolute" )
                 , ( "overflow", "hidden" )
                 , ( "top", "0px" )
                 , ( "left", "0px" )
                 , ( "width", "100vw" )
                 , ( "height", "100vh" )
-                , ( "background-color", "#0F1108" )
+                , ( "background-color", "#FFFFFF" )
                 ]
             ]
             (WebGL.toHtmlWith
@@ -152,7 +150,11 @@ view model =
                                     , ( "z-index", "9" )
                                     ]
                                 ]
-                                [ star ]
+                                [ if size < 800 then
+                                    star 6
+                                  else
+                                    star 9
+                                ]
                         )
                         model.starPositions
                    )
@@ -215,7 +217,7 @@ globePerspective time =
             -pi / 3 + pi / 100 * sineTime
 
         phi =
-            3 * pi / 8 + pi / 100 * sineTime
+            2 * pi / 8 + pi / 100 * sineTime
 
         eye =
             vec3
@@ -225,7 +227,7 @@ globePerspective time =
                 |> Vector3.scale 9
     in
         Matrix4.mul (Matrix4.makePerspective 45 1 0.01 100)
-            (Matrix4.makeLookAt eye (vec3 0 0 0.6) (vec3 0 0 1))
+            (Matrix4.makeLookAt eye (vec3 0 0 1.2) (vec3 0 0 1))
 
 
 rawTriangleToVertexTriangle : ( Vec3, Vec3, Vec3 ) -> ( Vertex, Vertex, Vertex )
@@ -313,7 +315,7 @@ void main() {
 
   float breakRadius1 = 0.8 + 0.12 * (sin(thetaCenter * 3.0 - time / 1800.0)) + 0.06 * (sin(thetaCenter * 5.0 + 0.3 + time / 1800.0));
 
-  float breakRadius2 = breakRadius1 + 0.8;
+  float breakRadius2 = breakRadius1 + 0.8 + 0.04 * (sin(thetaCenter * 0.3 + time / 1800.0));
 
   float splitRatio = getSplitRatio(radius, breakRadius1, breakRadius2);
 
@@ -321,8 +323,8 @@ void main() {
 
   vec3 newPosition = center + (position - center) * splitRatio;
 
-  vec4 color1 = vec4(0.0 / 255.0, 73.0 / 255.0, 107.0 / 255.0, 1.0);
-  vec4 color2 = vec4(38.0 / 255.0, 18.0 / 255.0, 32.0 / 255.0, 1.0);
+  vec4 color1 = vec4(120.0 / 255.0, 120.0 / 255.0, 120.0 / 255.0, 1.0);
+  vec4 color2 = vec4(120.0 / 255.0, 120.0 / 255.0, 120.0 / 255.0, 0.3);
 
   baseColor = colorRatio * color1 + (1.0 - colorRatio) * color2;
 
