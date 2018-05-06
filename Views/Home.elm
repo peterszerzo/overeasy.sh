@@ -50,7 +50,7 @@ links : List ( String, String )
 links =
     [ ( "/more-simple-less-simple", "1. more-simple-less-simple" )
     , ( "/our-bearings-are-fragile", "2. our-bearings-are-fragile" )
-    , ( "/bureaucracy-is-distracting", "3. bureaucracy-is-distracting" )
+    , ( "", "3. bureaucracy-is-distracting" )
     , ( "", "4. my-sweet-soothing-tax-id" )
     , ( "", "5. moebius-racer" )
     ]

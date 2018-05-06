@@ -1,37 +1,35 @@
 module Pieces.BureaucracyIsDistracting exposing (..)
 
+import Random
 import AnimationFrame
 import Time
-import Random
 import Html exposing (Html, program, div, text)
 import Html.Attributes exposing (style)
-import Svg exposing (svg, path, line)
-import Svg.Attributes exposing (viewBox, d, fill, strokeWidth, stroke, x1, y1, x2, y2)
 import Pieces.BureaucracyIsDistracting.Ball as Ball
+import Pieces.BureaucracyIsDistracting.Scribble as Scribble
 
 
 type alias Model =
     { ball : Ball.Ball
+    , scribble : Maybe Scribble.Scribble
+    , time : Time.Time
     }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { ball =
-            { x = 0.5
-            , y = 0.5
-            , vx = 0
-            , vy = 0
-            , rot = 0.5
-            }
+    ( { ball = Ball.init
+      , scribble = Nothing
+      , time = 0
       }
-    , Cmd.none
+    , Random.generate GenerateScribble Scribble.generator
     )
 
 
 type Msg
     = Tick Time.Time
-    | RepositionBall Ball.Repositioning
+    | GenerateScribble Scribble.Scribble
+    | RepositionBall Ball.Ball
 
 
 w : Float
@@ -47,30 +45,24 @@ h =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Tick _ ->
-            ( { ball = Ball.tick model.ball
+        Tick time ->
+            ( { model
+                | ball = Ball.tick model.ball
+                , time = time
               }
-            , if model.ball.x > 1.2 then
-                Random.generate RepositionBall
-                    (Random.map3
-                        Ball.Repositioning
-                        (Random.float -0.4 -0.2)
-                        (Random.float 0 1)
-                        (Random.int 0 4)
-                    )
+            , if Ball.shouldReposition model.ball then
+                Ball.reposition RepositionBall model.ball
               else
                 Cmd.none
             )
 
-        RepositionBall { offsetInMoveDirection, offsetPerpendicular, dir } ->
-            ( { ball =
-                    { x = offsetInMoveDirection
-                    , y = offsetPerpendicular
-                    , vx = 0
-                    , vy = 0
-                    , rot = model.ball.rot
-                    }
-              }
+        RepositionBall ball ->
+            ( { model | ball = ball }
+            , Cmd.none
+            )
+
+        GenerateScribble scribble ->
+            ( { model | scribble = Just scribble }
             , Cmd.none
             )
 
@@ -78,25 +70,6 @@ update msg model =
 toPx : Float -> String
 toPx no =
     (toString no) ++ "px"
-
-
-scribble : Html msg
-scribble =
-    svg [ Svg.Attributes.width "100", Svg.Attributes.height "100", viewBox "0 0 100 100" ]
-        [ path
-            [ d """
-M10,15 t10,3 t10,-3 t10,2 t10,-4 t10,2 t10,-3 t10,1 t10,-4
-
-M10,35 t10,2 t10,-4 t10,3 t10,-2 t10,3 t10,-1 t10,2 t10,-5
-"""
-            , fill "none"
-            , strokeWidth "1px"
-            , stroke "#000"
-            ]
-            []
-        , line [ x1 "98", y1 "2", x2 "98", y2 "98", stroke "#999", strokeWidth "1" ] []
-        , line [ x1 "2", y1 "98", x2 "98", y2 "98", stroke "#999", strokeWidth "1" ] []
-        ]
 
 
 ball : Ball.Ball -> Html msg
@@ -121,7 +94,13 @@ ball { x, y, rot } =
                 , ( "position", "absolute" )
                 , ( "top", "0px" )
                 , ( "left", "0px" )
-                , ( "transform", "translate3d(" ++ toPx (15 + (cos rot) * 6 - 3) ++ "," ++ toPx (15 + (sin rot) * 6 - 3) ++ ", 0px)" )
+                , ( "transform"
+                  , "translate3d("
+                        ++ toPx (15 + (cos rot) * 6 - 3)
+                        ++ ","
+                        ++ toPx (15 + (sin rot) * 6 - 3)
+                        ++ ", 0px)"
+                  )
                 ]
             ]
             []
@@ -151,7 +130,10 @@ view model =
                 , ( "left", "140px" )
                 ]
             ]
-            [ scribble ]
+            [ model.scribble
+                |> Maybe.map (Scribble.view model.time)
+                |> Maybe.withDefault (text "")
+            ]
         ]
 
 

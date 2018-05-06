@@ -22,7 +22,8 @@ view onClick =
             , left (px 6)
             , padding (px 12)
             , property "z-index" "102"
-            , color (rgba 255 255 255 0.6)
+            , backgroundColor (hex "000000")
+            , color (hex "FFFFFF")
             , property "transition" "all 0.3s"
             , hover
                 [ backgroundColor (hex "ffc235")
