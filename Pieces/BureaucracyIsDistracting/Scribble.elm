@@ -25,81 +25,88 @@ import Svg.Attributes
 
 type alias Scribble =
     { offsets : List (List Float)
-    , red : Maybe Int
+    , reds : List Int
     }
 
 
-offsets : List Float
-offsets =
-    [ 3, -3, 2, -4, 5, -3, 3, -4 ]
-
-
-generator : Random.Generator Scribble
-generator =
-    Random.float 1.5 4.5
+generator : List Int -> Random.Generator Scribble
+generator reds =
+    Random.float 1.5 2.5
         |> Random.list 8
-        |> Random.map
-            (List.indexedMap
-                (\index no ->
-                    if index % 2 == 0 then
-                        -no
-                    else
-                        no
-                )
+        |> Random.map2
+            (\rem offsets ->
+                List.indexedMap
+                    (\index no ->
+                        if index % 2 == rem then
+                            -no
+                        else
+                            no
+                    )
+                    offsets
             )
+            (Random.int 0 1)
         |> Random.list 10
         |> Random.map
             (\offsets ->
-                Scribble offsets Nothing
+                Scribble offsets reds
             )
 
 
-modifyOffset : Int -> Float -> Float
-modifyOffset index time =
-    sin (time / 150 + (toFloat index) * 3.5 * pi)
-        * (if index % 3 == 0 then
+modifyOffset : Int -> Int -> Float -> Float
+modifyOffset rowIndex columnIndex time =
+    sin (time / 150 + (toFloat columnIndex) * 3.5 * pi + (toFloat rowIndex) * 0.3)
+        * (if columnIndex % 3 == 0 then
             0.8
            else
             0.6
           )
 
 
-single : Float -> Float -> List Float -> Html msg
-single time startY offsets =
-    path
-        [ d <|
-            "M10,"
-                ++ (toString startY)
-                ++ (offsets
-                        |> List.indexedMap
-                            (\index offset ->
-                                let
-                                    modifiedOffset =
-                                        (modifyOffset index time)
-                                            + offset
-                                in
-                                    "c3,2,6,-3,10,"
-                                        ++ (toString modifiedOffset)
-                            )
-                        |> String.join ""
-                   )
-        , fill "none"
-        , strokeWidth "1px"
-        , stroke "#000"
-        , strokeLinecap "round"
-        , strokeLinejoin "round"
-        ]
-        []
+single : Int -> Float -> Bool -> List Float -> Html msg
+single index time isRed offsets =
+    let
+        startY =
+            ((toFloat index) * 10 + 10)
+    in
+        path
+            [ d <|
+                "M10,"
+                    ++ (toString startY)
+                    ++ (offsets
+                            |> List.indexedMap
+                                (\columnIndex offset ->
+                                    let
+                                        modifiedOffset =
+                                            (modifyOffset index columnIndex time)
+                                                + offset
+                                    in
+                                        "c3,2,6,-3,10,"
+                                            ++ (toString modifiedOffset)
+                                )
+                            |> String.join ""
+                       )
+            , fill "none"
+            , strokeWidth "1px"
+            , stroke
+                (if isRed then
+                    "#B50922"
+                 else
+                    "#000"
+                )
+            , strokeLinecap "round"
+            , strokeLinejoin "round"
+            ]
+            []
 
 
 view : Float -> Scribble -> Html msg
 view time scribble =
-    svg [ width "100", height "160", viewBox "0 0 100 160" ]
+    svg [ width "150", height "240", viewBox "0 0 100 160" ]
         [ g []
             (scribble.offsets
                 |> (List.indexedMap
                         (\index offsets ->
-                            single time ((toFloat index) * 10 + 10) offsets
+                            single index time (List.member index scribble.reds) offsets
                         )
                    )
             )

@@ -7,11 +7,12 @@ import Html exposing (Html, program, div, text)
 import Html.Attributes exposing (style)
 import Pieces.BureaucracyIsDistracting.Ball as Ball
 import Pieces.BureaucracyIsDistracting.Scribble as Scribble
+import Pieces.BureaucracyIsDistracting.Stamp as Stamp
 
 
 type alias Model =
     { ball : Ball.Ball
-    , scribble : Maybe Scribble.Scribble
+    , scribbles : List Scribble.Scribble
     , time : Time.Time
     }
 
@@ -19,10 +20,14 @@ type alias Model =
 init : ( Model, Cmd Msg )
 init =
     ( { ball = Ball.init
-      , scribble = Nothing
+      , scribbles = []
       , time = 0
       }
-    , Random.generate GenerateScribble Scribble.generator
+    , Cmd.batch
+        [ Random.generate GenerateScribble (Scribble.generator [ 3, 4 ])
+        , Random.generate GenerateScribble (Scribble.generator [ 2, 6, 7 ])
+        , Random.generate GenerateScribble (Scribble.generator [ 1, 5 ])
+        ]
     )
 
 
@@ -62,7 +67,7 @@ update msg model =
             )
 
         GenerateScribble scribble ->
-            ( { model | scribble = Just scribble }
+            ( { model | scribbles = scribble :: model.scribbles }
             , Cmd.none
             )
 
@@ -79,7 +84,7 @@ ball { x, y, rot } =
             [ ( "width", "30px" )
             , ( "height", "30px" )
             , ( "border-radius", "50%" )
-            , ( "background-color", "#0F4368" )
+            , ( "background-color", "#125584" )
             , ( "position", "absolute" )
             , ( "left", toPx (x * w - 15) )
             , ( "top", toPx (y * h - 15) )
@@ -123,17 +128,42 @@ view model =
             ]
         ]
         [ ball model.ball
+        , div [] <|
+            List.map2
+                (\styles scribble ->
+                    div
+                        [ style <|
+                            [ ( "position", "absolute" )
+                            , ( "top", "40px" )
+                            , ( "left", "140px" )
+                            ]
+                                ++ styles
+                        ]
+                        [ Scribble.view model.time scribble
+                        ]
+                )
+                [ [ ( "top", "40px" )
+                  , ( "left", "140px" )
+                  ]
+                , [ ( "top", "280px" )
+                  , ( "left", "440px" )
+                  ]
+                , [ ( "top", "80px" )
+                  , ( "left", "540px" )
+                  ]
+                ]
+                model.scribbles
         , div
             [ style
-                [ ( "position", "absolute" )
-                , ( "top", "40px" )
+                [ ( "width", "160px" )
+                , ( "height", "160px" )
+                , ( "position", "absolute" )
+                , ( "top", "260px" )
                 , ( "left", "140px" )
+                , ( "transform", "rotateZ(45deg)" )
                 ]
             ]
-            [ model.scribble
-                |> Maybe.map (Scribble.view model.time)
-                |> Maybe.withDefault (text "")
-            ]
+            [ Stamp.view ]
         ]
 
 
