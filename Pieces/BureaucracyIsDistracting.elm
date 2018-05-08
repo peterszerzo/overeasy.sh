@@ -8,6 +8,7 @@ import Html.Attributes exposing (style)
 import Pieces.BureaucracyIsDistracting.Ball as Ball
 import Pieces.BureaucracyIsDistracting.Scribble as Scribble
 import Pieces.BureaucracyIsDistracting.Stamp as Stamp
+import Pieces.BureaucracyIsDistracting.Constants as Constants
 
 
 type alias Model =
@@ -84,7 +85,7 @@ ball { x, y, rot } =
             [ ( "width", "30px" )
             , ( "height", "30px" )
             , ( "border-radius", "50%" )
-            , ( "background-color", "#125584" )
+            , ( "background-color", Constants.blue )
             , ( "position", "absolute" )
             , ( "left", toPx (x * w - 15) )
             , ( "top", toPx (y * h - 15) )
@@ -144,12 +145,15 @@ view model =
                 )
                 [ [ ( "top", "40px" )
                   , ( "left", "140px" )
+                  , ( "transform", "rotateZ(-30deg)" )
                   ]
                 , [ ( "top", "280px" )
-                  , ( "left", "440px" )
+                  , ( "left", "420px" )
+                  , ( "transform", "rotateZ(30deg)" )
                   ]
-                , [ ( "top", "80px" )
-                  , ( "left", "540px" )
+                , [ ( "top", "60px" )
+                  , ( "left", "600px" )
+                  , ( "transform", "rotateZ(-45deg)" )
                   ]
                 ]
                 model.scribbles
@@ -159,11 +163,22 @@ view model =
                 , ( "height", "160px" )
                 , ( "position", "absolute" )
                 , ( "top", "260px" )
-                , ( "left", "140px" )
+                , ( "left", "160px" )
                 , ( "transform", "rotateZ(45deg)" )
                 ]
             ]
-            [ Stamp.view ]
+            [ Stamp.view model.time ]
+        , div
+            [ style
+                [ ( "width", "160px" )
+                , ( "height", "160px" )
+                , ( "position", "absolute" )
+                , ( "top", "80px" )
+                , ( "left", "320px" )
+                , ( "transform", "rotateZ(210deg)" )
+                ]
+            ]
+            [ Stamp.view model.time ]
         ]
 
 

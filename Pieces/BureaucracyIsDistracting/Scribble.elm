@@ -1,5 +1,6 @@
 module Pieces.BureaucracyIsDistracting.Scribble exposing (..)
 
+import Time
 import Random
 import Html exposing (Html, text)
 import Svg exposing (svg, path, line, rect, g)
@@ -21,6 +22,7 @@ import Svg.Attributes
         , strokeLinecap
         , strokeLinejoin
         )
+import Pieces.BureaucracyIsDistracting.Constants as Constants
 
 
 type alias Scribble =
@@ -31,7 +33,7 @@ type alias Scribble =
 
 generator : List Int -> Random.Generator Scribble
 generator reds =
-    Random.float 1.5 2.5
+    Random.float 1.5 3.2
         |> Random.list 8
         |> Random.map2
             (\rem offsets ->
@@ -54,7 +56,7 @@ generator reds =
 
 modifyOffset : Int -> Int -> Float -> Float
 modifyOffset rowIndex columnIndex time =
-    sin (time / 150 + (toFloat columnIndex) * 3.5 * pi + (toFloat rowIndex) * 0.3)
+    sin (time / 240 + (toFloat columnIndex) * 3.5 * pi + (toFloat rowIndex) * 0.3)
         * (if columnIndex % 3 == 0 then
             0.8
            else
@@ -66,7 +68,7 @@ single : Int -> Float -> Bool -> List Float -> Html msg
 single index time isRed offsets =
     let
         startY =
-            ((toFloat index) * 10 + 10)
+            ((toFloat index) * 14 + 10)
     in
         path
             [ d <|
@@ -80,16 +82,16 @@ single index time isRed offsets =
                                             (modifyOffset index columnIndex time)
                                                 + offset
                                     in
-                                        "c3,2,6,-3,10,"
+                                        "c5,4,10,-5,15,"
                                             ++ (toString modifiedOffset)
                                 )
                             |> String.join ""
                        )
             , fill "none"
-            , strokeWidth "1px"
+            , strokeWidth "2px"
             , stroke
                 (if isRed then
-                    "#B50922"
+                    Constants.red
                  else
                     "#000"
                 )
@@ -99,9 +101,9 @@ single index time isRed offsets =
             []
 
 
-view : Float -> Scribble -> Html msg
+view : Time.Time -> Scribble -> Html msg
 view time scribble =
-    svg [ width "150", height "240", viewBox "0 0 100 160" ]
+    svg [ width "160", height "240", viewBox "0 0 160 240" ]
         [ g []
             (scribble.offsets
                 |> (List.indexedMap
