@@ -149,6 +149,24 @@ update msg model =
                     ( model, Cmd.none )
 
 
+viewProject : Html.Html msg -> Html.Styled.Html msg
+viewProject project =
+    div
+        [ css
+            [ width (pct 100)
+            , height (pct 100)
+            , displayFlex
+            , alignItems center
+            , justifyContent center
+            , Foreign.children
+                [ Foreign.div
+                    [ property "transform" "scale(1.0)" ]
+                ]
+            ]
+        ]
+        [ project |> fromUnstyled ]
+
+
 view : Model -> Html Msg
 view model =
     div
@@ -188,17 +206,17 @@ view model =
             OurBearingsAreFragile model ->
                 Pieces.OurBearingsAreFragile.view model
                     |> Html.map BearingsAreFragileMsg
-                    |> fromUnstyled
+                    |> viewProject
 
             MoreSimpleLessSimple model ->
                 Pieces.MoreSimpleLessSimple.view model
                     |> Html.map MoreSimpleLessSimpleMsg
-                    |> fromUnstyled
+                    |> viewProject
 
             BureaucracyIsDistracting model ->
                 Pieces.BureaucracyIsDistracting.view model
                     |> Html.map BureaucracyIsDistractingMsg
-                    |> fromUnstyled
+                    |> viewProject
           )
         ]
         |> toUnstyled

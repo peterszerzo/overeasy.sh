@@ -17,34 +17,37 @@ import Concepts.Icosahedron as Icosahedron
 
 
 type alias Model =
-    { window : Window.Size
-    , time : Time.Time
+    { time : Time.Time
     , startTime : Time.Time
     , starPositions : List ( Float, Float )
     }
 
 
 type Msg
-    = Resize Window.Size
-    | Tick Time.Time
+    = Tick Time.Time
     | StarPositions (List ( Float, Float ))
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( { window =
-            { width = 0
-            , height = 0
-            }
-      , time = 0
+    ( { time = 0
       , startTime = 0
       , starPositions = []
       }
     , Cmd.batch
-        [ Task.perform Resize Window.size
-        , Random.generate StarPositions generateStarPositions
+        [ Random.generate StarPositions generateStarPositions
         ]
     )
+
+
+w : Float
+w =
+    800
+
+
+h : Float
+h =
+    480
 
 
 generateStarPositions : Random.Generator (List ( Float, Float ))
@@ -55,9 +58,6 @@ generateStarPositions =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Resize window ->
-            ( { model | window = window }, Cmd.none )
-
         Tick time ->
             ( { model
                 | startTime =
@@ -77,8 +77,7 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Window.resizes Resize
-        , AnimationFrame.times Tick
+        [ AnimationFrame.times Tick
         ]
 
 
@@ -104,20 +103,19 @@ view model =
             12
 
         size =
-            max model.window.width model.window.height + 240
+            max w h + 240 |> floor
 
         top =
-            (toFloat model.window.width - toFloat model.window.height) / 2 |> min 0
+            (w - h) / 2 |> min 0
     in
         div
             [ style
-                [ ( "position", "absolute" )
-                , ( "overflow", "hidden" )
-                , ( "top", "0px" )
-                , ( "left", "0px" )
-                , ( "width", "100vw" )
-                , ( "height", "100vh" )
+                [ ( "overflow", "hidden" )
+                , ( "position", "relative" )
+                , ( "width", (toString w) ++ "px" )
+                , ( "height", (toString h) ++ "px" )
                 , ( "background-color", "#FFFFFF" )
+                , ( "border", "2px solid #000" )
                 ]
             ]
             (WebGL.toHtmlWith

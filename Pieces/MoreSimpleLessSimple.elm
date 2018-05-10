@@ -86,14 +86,11 @@ view model =
     div
         [ style
             [ ( "width", "800px" )
+            , ( "position", "relative" )
             , ( "height", "480px" )
             , ( "background-color", "#FFF" )
-            , ( "position", "absolute" )
-            , ( "overflow", "visible" )
-            , ( "top", "50%" )
-            , ( "left", "50%" )
             , ( "font-family", "Quicksand" )
-            , ( "transform", "translate3d(-50%, -50%, 0)" )
+            , ( "border", "2px solid #000" )
             ]
         ]
         [ div

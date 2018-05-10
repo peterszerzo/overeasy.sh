@@ -119,12 +119,9 @@ view model =
         [ style
             [ ( "width", (toString w) ++ "px" )
             , ( "height", (toString h) ++ "px" )
+            , ( "position", "relative" )
             , ( "background-color", "#FFF" )
-            , ( "position", "absolute" )
             , ( "overflow", "hidden" )
-            , ( "top", "50%" )
-            , ( "left", "50%" )
-            , ( "transform", "translate3d(-50%, -50%, 0)" )
             , ( "border", "2px solid black" )
             ]
         ]

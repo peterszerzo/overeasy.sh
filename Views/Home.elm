@@ -3,6 +3,7 @@ module Views.Home exposing (..)
 import Time
 import Json.Decode as Decode
 import Css exposing (..)
+import Css.Media as Media
 import Html.Styled exposing (Html, text, div, img, h2, a, p, fromUnstyled)
 import Html.Styled.Attributes exposing (class, css, src, href)
 import Html.Styled.Events exposing (onWithOptions)
@@ -33,14 +34,16 @@ link navigate ( url, label ) =
             , display inlineBlock
             , margin (px 10)
             , borderBottom3 (px 1) solid (hex "000000")
-            , fontWeight normal
             , opacity
                 (if url == "" then
                     (num 0.4)
                  else
                     (num 1.0)
                 )
-            , fontSize (Css.rem 1)
+            , fontSize (Css.rem 0.75)
+            , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
+                [ fontSize (Css.rem 1)
+                ]
             ]
         ]
         [ text label ]
@@ -50,7 +53,7 @@ links : List ( String, String )
 links =
     [ ( "/more-simple-less-simple", "1. more-simple-less-simple" )
     , ( "/our-bearings-are-fragile", "2. our-bearings-are-fragile" )
-    , ( "", "3. bureaucracy-is-distracting" )
+    , ( "/bureaucracy-is-distracting", "3. bureaucracy-is-distracting" )
     , ( "", "4. my-sweet-soothing-tax-id" )
     , ( "", "5. moebius-racer" )
     ]
@@ -59,15 +62,33 @@ links =
 tiltedSubtitleStyle : Style
 tiltedSubtitleStyle =
     Css.batch
-        [ fontSize (Css.rem 1)
-        , position absolute
-        , top (px -50)
-        , width (px 180)
+        [ position absolute
+        , top (px -30)
+        , width (px 150)
         , lineHeight (num 1.4)
         , textAlign center
         , letterSpacing (Css.rem 0.08)
         , property "transform-origin" "center center"
-        , fontWeight normal
+        , fontSize (Css.rem 0.75)
+        , firstOfType
+            [ left (px -110)
+            , property "transform" "rotateZ(-45deg)"
+            , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
+                [ left (px -150)
+                ]
+            ]
+        , lastOfType
+            [ right (px -110)
+            , property "transform" "rotateZ(+45deg)"
+            , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
+                [ right (px -150)
+                ]
+            ]
+        , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
+            [ fontSize (Css.rem 1)
+            , top (px -60)
+            , width (px 200)
+            ]
         ]
 
 
@@ -76,11 +97,11 @@ view config =
     div
         [ css
             [ width (pct 100)
+            , height (pct 100)
             , position absolute
             , Css.top (px 0)
             , Css.left (px 0)
             , overflow hidden
-            , height (pct 100)
             , backgroundColor (hex "ffc235")
             ]
         ]
@@ -108,26 +129,27 @@ view config =
                 ]
                 [ div
                     [ css
-                        [ width (px 150)
-                        , height (px 150)
+                        [ width (px 120)
+                        , height (px 120)
                         , margin auto
                         , position relative
+                        , fontSize (Css.rem 0.75)
+                        , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
+                            [ width (px 150)
+                            , height (px 150)
+                            ]
                         ]
                     ]
                     [ Icons.logo
                     , h2
                         [ css
                             [ tiltedSubtitleStyle
-                            , left (px -130)
-                            , property "transform" "rotateZ(-45deg)"
                             ]
                         ]
                         [ text "~ it's like computer art ~" ]
                     , h2
                         [ css
                             [ tiltedSubtitleStyle
-                            , right (px -130)
-                            , property "transform" "rotateZ(+45deg)"
                             ]
                         ]
                         [ text "~ a silly scramble from "
