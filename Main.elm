@@ -211,6 +211,9 @@ view model =
                 , Foreign.body
                     [ backgroundColor (hex "000")
                     ]
+                , Foreign.everything
+                    [ property "font-family" "Moon, sans-serif"
+                    ]
                 ]
             , if model.route == Home then
                 text ""

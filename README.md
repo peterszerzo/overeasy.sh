@@ -1,3 +1,13 @@
 # OverEasy ~ it's like computer art
 
-A collection of casual weekly artistic experiments on communicating and healing through visuals, sounds, and whatever else works. Hacked together by [this person](http://peterszerzo.com).
+Computational art playground for expression and healing through visuals, sounds, and whatever else works.
+
+## Running locally
+
+`elm-reactor`
+
+`open http://localhost:8000/Main.elm`
+
+## License
+
+MIT

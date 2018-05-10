@@ -1,18 +1,16 @@
 module Pieces.OurBearingsAreFragile exposing (..)
 
-import Task
 import Time
 import Random
 import AnimationFrame
 import Html exposing (Html, Attribute, div, program)
 import Html.Attributes exposing (class, style, width, height)
 import Svg exposing (svg, path)
-import Svg.Attributes exposing (viewBox, d, fill)
+import Svg.Attributes exposing (viewBox, d, fill, transform)
 import Math.Matrix4 as Matrix4
 import Math.Vector3 as Vector3 exposing (Vec3, vec3)
 import Math.Vector4 as Vector4 exposing (Vec4, vec4)
 import WebGL
-import Window
 import Concepts.Icosahedron as Icosahedron
 
 
@@ -91,6 +89,7 @@ star size =
         [ path
             [ d "M20,50 L40,40 L50,20 L60,40 L80,50 L60,60 L50,80 L40,60 M20,20"
             , fill "#AEAEAE"
+            , transform "rotate(-12)"
             ]
             []
         ]

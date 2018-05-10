@@ -89,7 +89,6 @@ view model =
             , ( "position", "relative" )
             , ( "height", "480px" )
             , ( "background-color", "#FFF" )
-            , ( "font-family", "Quicksand" )
             , ( "border", "2px solid #000" )
             ]
         ]
@@ -169,7 +168,7 @@ view model =
                                 [ span
                                     [ style
                                         [ ( "position", "absolute" )
-                                        , ( "right", "5px" )
+                                        , ( "right", "8px" )
                                         , ( "bottom", "5px" )
                                         , ( "opacity", "1" )
                                         ]

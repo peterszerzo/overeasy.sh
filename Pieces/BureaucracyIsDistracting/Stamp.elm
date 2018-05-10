@@ -7,98 +7,133 @@ import Svg.Attributes exposing (id, viewBox, x, y, x1, x2, y1, y2, width, height
 import Pieces.BureaucracyIsDistracting.Constants as Constants
 
 
-view : Time.Time -> Html msg
-view time =
+toPx : Float -> String
+toPx =
+    toString
+        >> (\p -> p ++ "%")
+
+
+gradient : { id : String, phase : Float, isHorizontal : Bool } -> Html msg
+gradient config =
     let
         factor =
-            sin (time / 960)
+            sin config.phase
 
-        percentageStart =
+        blackStart =
+            8 - 4 * factor |> toPx
+
+        blackEnd =
+            92 + 3 * factor |> toPx
+
+        redStart =
             20
                 + 20
                 * (1 + factor)
-                |> toString
-                |> (\p -> p ++ "%")
+                |> toPx
 
-        percentageEnd =
+        redEnd =
             45
                 + 20
                 * (1 + factor)
-                |> toString
-                |> (\p -> p ++ "%")
+                |> toPx
     in
-        svg [ viewBox "0 0 160 160" ]
-            [ defs
-                []
-                [ linearGradient [ id "stamp", x1 "0%", x2 "100%", y1 "0%", y2 "0%" ]
-                    [ stop [ offset "0%", stopColor "#000" ] []
-                    , stop [ offset percentageStart, stopColor "#000" ] []
-                    , stop [ offset percentageStart, stopColor Constants.red ] []
-                    , stop [ offset percentageEnd, stopColor Constants.red ] []
-                    , stop [ offset percentageEnd, stopColor "#000" ] []
-                    , stop [ offset "100%", stopColor "#000" ] []
-                    ]
+        linearGradient
+            (if config.isHorizontal then
+                [ id config.id
+                , x1 "0%"
+                , x2 "100%"
+                , y1 "0%"
+                , y2 "0%"
                 ]
-            , rect
-                [ x "20"
-                , y "24"
-                , rx "6"
-                , ry "6"
-                , width "98"
-                , height "98"
-                , fill "none"
-                , stroke "#000"
-                , strokeWidth "2"
-                , strokeLinecap "round"
-                , strokeLinejoin "round"
+             else
+                [ id config.id
+                , x1 "0%"
+                , x2 "0%"
+                , y1 "0%"
+                , y2 "100%"
                 ]
-                []
-            , path
-                [ fill "none"
-                , stroke "#000"
-                , strokeWidth "2"
-                , strokeLinecap "round"
-                , stroke "#000"
-                , strokeLinejoin "round"
-                , d <|
-                    "M126,18 "
-                        ++ (String.repeat 5 "l0,6 t2,2 l6,0 t2,2 l0,6 t-2,2 l-6,0 t-2,2")
-                ]
-                []
-            , path
-                [ fill "none"
-                , stroke "#000"
-                , strokeWidth "2"
-                , strokeLinecap "round"
-                , stroke "#000"
-                , strokeLinejoin "round"
-                , d <|
-                    "M1,24 "
-                        ++ (String.repeat 5 "l0,6 t2,2 l6,0 t2,2 l0,6 t-2,2 l-6,0 t-2,2")
-                ]
-                []
-            , path
-                [ fill "none"
-                , stroke "#000"
-                , strokeWidth "2"
-                , strokeLinecap "round"
-                , stroke "#000"
-                , strokeLinejoin "round"
-                , d <|
-                    "M20,132 "
-                        ++ (String.repeat 5 "l6,0 t2,2 l0,6 t2,2 l6,0 t2,-2 l0,-6 t2,-2")
-                ]
-                []
-            , path
-                [ fill "none"
-                , stroke "#000"
-                , strokeWidth "2"
-                , strokeLinecap "round"
-                , stroke "url(#stamp)"
-                , strokeLinejoin "round"
-                , d <|
-                    "M14,4 "
-                        ++ (String.repeat 5 "l6,0 t2,2 l0,6 t2,2 l6,0 t2,-2 l0,-6 t2,-2")
-                ]
-                []
+            )
+            [ stop [ offset "0%", stopColor "#000" ] []
+            , stop [ offset redStart, stopColor "#000" ] []
+            , stop [ offset redStart, stopColor Constants.red ] []
+            , stop [ offset redEnd, stopColor Constants.red ] []
+            , stop [ offset redEnd, stopColor "#000" ] []
+            , stop [ offset "100%", stopColor "#000" ] []
             ]
+
+
+view : { time : Time.Time, singleSnake : Bool } -> Html msg
+view config =
+    svg [ viewBox "0 0 160 160" ]
+        [ defs
+            []
+            [ gradient { id = "snake1", phase = config.time / 960, isHorizontal = False }
+            , gradient { id = "snake2", phase = config.time / 1080, isHorizontal = True }
+            ]
+        , rect
+            [ x "20"
+            , y "24"
+            , rx "6"
+            , ry "6"
+            , width "98"
+            , height "98"
+            , fill "none"
+            , stroke "#000"
+            , strokeWidth "2"
+            , strokeLinecap "round"
+            , strokeLinejoin "round"
+            ]
+            []
+        , path
+            [ fill "none"
+            , stroke "#000"
+            , strokeWidth "2"
+            , strokeLinecap "round"
+            , stroke "#000"
+            , strokeLinejoin "round"
+            , d <|
+                "M126,18 "
+                    ++ (String.repeat 5 "l0,6 t2,2 l6,0 t2,2 l0,6 t-2,2 l-6,0 t-2,2")
+            ]
+            []
+        , path
+            [ fill "none"
+            , stroke "#000"
+            , strokeWidth "2"
+            , strokeLinecap "round"
+            , stroke "url(#snake1)"
+            , strokeLinejoin "round"
+            , d <|
+                "M1,24 "
+                    ++ (String.repeat 5 "l0,6 t2,2 l6,0 t2,2 l0,6 t-2,2 l-6,0 t-2,2")
+            ]
+            []
+        , path
+            [ fill "none"
+            , stroke "#000"
+            , strokeWidth "2"
+            , stroke "#000"
+            , strokeLinecap "round"
+            , strokeLinejoin "round"
+            , d <|
+                "M20,132 "
+                    ++ (String.repeat 5 "l6,0 t2,2 l0,6 t2,2 l6,0 t2,-2 l0,-6 t2,-2")
+            ]
+            []
+        , path
+            [ fill "none"
+            , stroke "#000"
+            , strokeWidth "2"
+            , strokeLinecap "round"
+            , stroke <|
+                if config.singleSnake then
+                    "#000"
+                else
+                    "url(#snake2)"
+            , strokeLinejoin "round"
+            , d <|
+                "M14,4 "
+                    ++ (String.repeat 5 "l6,0 t2,2 l0,6 t2,2 l6,0 t2,-2 l0,-6 t2,-2")
+            ]
+            []
+        ]

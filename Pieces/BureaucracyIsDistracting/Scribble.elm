@@ -33,7 +33,7 @@ type alias Scribble =
 
 generator : List Int -> Random.Generator Scribble
 generator reds =
-    Random.float 1.5 3.2
+    Random.float 1.5 2.8
         |> Random.list 8
         |> Random.map2
             (\rem offsets ->
@@ -58,9 +58,9 @@ modifyOffset : Int -> Int -> Float -> Float
 modifyOffset rowIndex columnIndex time =
     sin (time / 240 + (toFloat columnIndex) * 3.5 * pi + (toFloat rowIndex) * 0.3)
         * (if columnIndex % 3 == 0 then
-            0.8
-           else
             0.6
+           else
+            0.4
           )
 
 

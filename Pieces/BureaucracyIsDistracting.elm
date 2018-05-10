@@ -164,7 +164,7 @@ view model =
                 , ( "transform", "rotateZ(45deg)" )
                 ]
             ]
-            [ Stamp.view model.time ]
+            [ Stamp.view { time = model.time, singleSnake = True } ]
         , div
             [ style
                 [ ( "width", "160px" )
@@ -175,7 +175,7 @@ view model =
                 , ( "transform", "rotateZ(210deg)" )
                 ]
             ]
-            [ Stamp.view model.time ]
+            [ Stamp.view { time = model.time, singleSnake = False } ]
         ]
 
 

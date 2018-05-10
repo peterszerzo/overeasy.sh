@@ -117,7 +117,6 @@ view config =
                 , displayFlex
                 , alignItems center
                 , justifyContent center
-                , property "font-family" "Moon, sans-serif"
                 , color (hex "000000")
                 , property "z-index" "100"
                 ]
