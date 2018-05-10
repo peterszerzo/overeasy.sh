@@ -41,6 +41,7 @@ link navigate ( url, label ) =
                     (num 1.0)
                 )
             , fontSize (Css.rem 0.75)
+            , fontWeight normal
             , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
                 [ fontSize (Css.rem 1)
                 ]
@@ -69,6 +70,7 @@ tiltedSubtitleStyle =
         , textAlign center
         , letterSpacing (Css.rem 0.08)
         , property "transform-origin" "center center"
+        , property "-webkit-font-smoothing" "subpixel-antialiased"
         , fontSize (Css.rem 0.75)
         , firstOfType
             [ left (px -110)
@@ -135,8 +137,8 @@ view config =
                         , position relative
                         , fontSize (Css.rem 0.75)
                         , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
-                            [ width (px 150)
-                            , height (px 150)
+                            [ width (px 140)
+                            , height (px 140)
                             ]
                         ]
                     ]

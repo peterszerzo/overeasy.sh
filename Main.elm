@@ -149,8 +149,8 @@ update msg model =
                     ( model, Cmd.none )
 
 
-viewProject : Html.Html msg -> Html.Styled.Html msg
-viewProject project =
+viewProject : Float -> Html.Html msg -> Html.Styled.Html msg
+viewProject scale project =
     div
         [ css
             [ width (pct 100)
@@ -158,68 +158,92 @@ viewProject project =
             , displayFlex
             , alignItems center
             , justifyContent center
-            , Foreign.children
-                [ Foreign.div
-                    [ property "transform" "scale(1.0)" ]
-                ]
             ]
         ]
-        [ project |> fromUnstyled ]
+        [ div
+            [ css
+                [ width (px 800)
+                , height (px 480)
+                , property "transform" <| "scale(" ++ (toString scale) ++ "," ++ (toString scale) ++ ")"
+                ]
+            ]
+            [ project |> fromUnstyled ]
+        ]
+
+
+w : Float
+w =
+    800
+
+
+h : Float
+h =
+    480
 
 
 view : Model -> Html Msg
 view model =
-    div
-        [ css
-            [ height (pct 100)
-            ]
-        ]
-        [ Foreign.global
-            [ Foreign.each
-                [ Foreign.body
-                , Foreign.html
-                ]
-                [ width (pct 100)
-                , height (pct 100)
-                , padding (px 0)
-                , margin (px 0)
-                ]
-            , Foreign.body
-                [ backgroundColor (hex "000")
+    let
+        fx =
+            (model.window.width - 40 |> toFloat) / w
+
+        fy =
+            (model.window.height - 40 |> toFloat) / h
+
+        scale =
+            min fx fy |> min 1
+    in
+        div
+            [ css
+                [ height (pct 100)
                 ]
             ]
-        , if model.route == Home then
-            text ""
-          else
-            Views.Nav.view (Navigate "/")
-        , (case model.route of
-            Home ->
-                Views.Home.view
-                    { navigate = Navigate
-                    , window = model.window
-                    , time = model.time - model.startTime
-                    }
+            [ Foreign.global
+                [ Foreign.each
+                    [ Foreign.body
+                    , Foreign.html
+                    ]
+                    [ width (pct 100)
+                    , height (pct 100)
+                    , padding (px 0)
+                    , margin (px 0)
+                    ]
+                , Foreign.body
+                    [ backgroundColor (hex "000")
+                    ]
+                ]
+            , if model.route == Home then
+                text ""
+              else
+                Views.Nav.view (Navigate "/")
+            , (case model.route of
+                Home ->
+                    Views.Home.view
+                        { navigate = Navigate
+                        , window = model.window
+                        , time = model.time - model.startTime
+                        }
 
-            NotFound ->
-                Html.Styled.text "Not found"
+                NotFound ->
+                    Html.Styled.text "Not found"
 
-            OurBearingsAreFragile model ->
-                Pieces.OurBearingsAreFragile.view model
-                    |> Html.map BearingsAreFragileMsg
-                    |> viewProject
+                OurBearingsAreFragile model ->
+                    Pieces.OurBearingsAreFragile.view model
+                        |> Html.map BearingsAreFragileMsg
+                        |> viewProject scale
 
-            MoreSimpleLessSimple model ->
-                Pieces.MoreSimpleLessSimple.view model
-                    |> Html.map MoreSimpleLessSimpleMsg
-                    |> viewProject
+                MoreSimpleLessSimple model ->
+                    Pieces.MoreSimpleLessSimple.view model
+                        |> Html.map MoreSimpleLessSimpleMsg
+                        |> viewProject scale
 
-            BureaucracyIsDistracting model ->
-                Pieces.BureaucracyIsDistracting.view model
-                    |> Html.map BureaucracyIsDistractingMsg
-                    |> viewProject
-          )
-        ]
-        |> toUnstyled
+                BureaucracyIsDistracting model ->
+                    Pieces.BureaucracyIsDistracting.view model
+                        |> Html.map BureaucracyIsDistractingMsg
+                        |> viewProject scale
+              )
+            ]
+            |> toUnstyled
 
 
 subscriptions : Model -> Sub Msg
