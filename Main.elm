@@ -11,6 +11,7 @@ import Html.Styled.Attributes exposing (css)
 import Pieces.MoreSimpleLessSimple
 import Pieces.OurBearingsAreFragile
 import Pieces.BureaucracyIsDistracting
+import Pieces.BordersAreLenient
 import Navigation
 import Window
 import UrlParser exposing (..)
@@ -23,6 +24,7 @@ type Route
     | OurBearingsAreFragile Pieces.OurBearingsAreFragile.Model
     | MoreSimpleLessSimple Pieces.MoreSimpleLessSimple.Model
     | BureaucracyIsDistracting Pieces.BureaucracyIsDistracting.Model
+    | BordersAreLenient Pieces.BordersAreLenient.Model
     | NotFound
 
 
@@ -40,6 +42,7 @@ matchers =
         , s "more-simple-less-simple" |> map (Pieces.MoreSimpleLessSimple.init |> Tuple.first |> MoreSimpleLessSimple)
         , s "our-bearings-are-fragile" |> map (Pieces.OurBearingsAreFragile.init |> Tuple.first |> OurBearingsAreFragile)
         , s "bureaucracy-is-distracting" |> map (Pieces.BureaucracyIsDistracting.init |> Tuple.first |> BureaucracyIsDistracting)
+        , s "borders-are-lenient" |> map (Pieces.BordersAreLenient.init |> Tuple.first |> BordersAreLenient)
         ]
 
 
@@ -49,6 +52,7 @@ type Msg
     | BearingsAreFragileMsg Pieces.OurBearingsAreFragile.Msg
     | MoreSimpleLessSimpleMsg Pieces.MoreSimpleLessSimple.Msg
     | BureaucracyIsDistractingMsg Pieces.BureaucracyIsDistracting.Msg
+    | BordersAreLenientMsg Pieces.BordersAreLenient.Msg
     | Resize Window.Size
     | Tick Time.Time
     | StartTime Time.Time
@@ -73,6 +77,9 @@ routeInitCmd route =
 
         BureaucracyIsDistracting _ ->
             Pieces.BureaucracyIsDistracting.init |> Tuple.second |> Cmd.map BureaucracyIsDistractingMsg
+
+        BordersAreLenient _ ->
+            Pieces.BordersAreLenient.init |> Tuple.second |> Cmd.map BordersAreLenientMsg
 
         _ ->
             Cmd.none
@@ -143,6 +150,16 @@ update msg model =
                 BureaucracyIsDistracting model_ ->
                     ( { model | route = BureaucracyIsDistracting (Pieces.BureaucracyIsDistracting.update msg model_ |> Tuple.first) }
                     , Pieces.BureaucracyIsDistracting.update msg model_ |> Tuple.second |> Cmd.map BureaucracyIsDistractingMsg
+                    )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        BordersAreLenientMsg msg ->
+            case model.route of
+                BordersAreLenient model_ ->
+                    ( { model | route = BordersAreLenient (Pieces.BordersAreLenient.update msg model_ |> Tuple.first) }
+                    , Pieces.BordersAreLenient.update msg model_ |> Tuple.second |> Cmd.map BordersAreLenientMsg
                     )
 
                 _ ->
@@ -244,6 +261,11 @@ view model =
                     Pieces.BureaucracyIsDistracting.view model
                         |> Html.map BureaucracyIsDistractingMsg
                         |> viewProject scale
+
+                BordersAreLenient model ->
+                    Pieces.BordersAreLenient.view model
+                        |> Html.map BordersAreLenientMsg
+                        |> viewProject scale
               )
             ]
             |> toUnstyled
@@ -261,6 +283,9 @@ subscriptions model =
 
             BureaucracyIsDistracting model ->
                 Pieces.BureaucracyIsDistracting.subscriptions model |> Sub.map BureaucracyIsDistractingMsg
+
+            BordersAreLenient model ->
+                Pieces.BordersAreLenient.subscriptions model |> Sub.map BordersAreLenientMsg
 
             _ ->
                 Sub.none
