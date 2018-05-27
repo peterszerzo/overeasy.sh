@@ -13,7 +13,7 @@ import Pieces.BureaucracyIsDistracting.Constants as Constants
 
 type alias Model =
     { ball : Ball.Ball
-    , scribbles : List Scribble.Scribble
+    , scribble : Maybe Scribble.Scribble
     , time : Time.Time
     }
 
@@ -21,14 +21,10 @@ type alias Model =
 init : ( Model, Cmd Msg )
 init =
     ( { ball = Ball.init
-      , scribbles = []
+      , scribble = Nothing
       , time = 0
       }
-    , Cmd.batch
-        [ Random.generate GenerateScribble (Scribble.generator [ 3, 4 ])
-        , Random.generate GenerateScribble (Scribble.generator [ 2, 6, 7 ])
-        , Random.generate GenerateScribble (Scribble.generator [ 1, 5 ])
-        ]
+    , Random.generate GenerateScribble Scribble.generator
     )
 
 
@@ -53,7 +49,7 @@ update msg model =
     case msg of
         Tick time ->
             ( { model
-                | ball = Ball.tick model.ball
+                | ball = Ball.tick model.time model.ball
                 , time = time
               }
             , if Ball.shouldReposition model.ball then
@@ -68,7 +64,7 @@ update msg model =
             )
 
         GenerateScribble scribble ->
-            ( { model | scribbles = scribble :: model.scribbles }
+            ( { model | scribble = Just scribble }
             , Cmd.none
             )
 
@@ -78,8 +74,31 @@ toPx no =
     (toString no) ++ "px"
 
 
-ball : Ball.Ball -> Html msg
-ball { x, y, rot } =
+ballTransform : Float -> List ( String, String )
+ballTransform rot =
+    [ ( "top", "0px" )
+    , ( "left", "0px" )
+    , ( "transform"
+      , "translate3d("
+            ++ toPx (15 + (cos rot) * 6 - 3)
+            ++ ","
+            ++ toPx (15 + (sin rot) * 6 - 3)
+            ++ ", 0px)"
+      )
+    ]
+
+
+ballTransform2 : Float -> List ( String, String )
+ballTransform2 rot =
+    [ ( "top", "15px" )
+    , ( "left", "19px" )
+    , ( "transform", "rotate(" ++ (toString rot) ++ "rad)" )
+    , ( "transform-origin", "-4px 0px" )
+    ]
+
+
+ball : Time.Time -> Ball.Ball -> Html msg
+ball time { x, y, rot } =
     div
         [ style
             [ ( "width", "30px" )
@@ -92,22 +111,14 @@ ball { x, y, rot } =
             ]
         ]
         [ div
-            [ style
+            [ style <|
                 [ ( "width", "6px" )
                 , ( "height", "6px" )
-                , ( "background-color", "white" )
-                , ( "border-radius", "50%" )
+                , ( "background-color", "#FFF" )
+                , ( "border-radius", "3px" )
                 , ( "position", "absolute" )
-                , ( "top", "0px" )
-                , ( "left", "0px" )
-                , ( "transform"
-                  , "translate3d("
-                        ++ toPx (15 + (cos rot) * 6 - 3)
-                        ++ ","
-                        ++ toPx (15 + (sin rot) * 6 - 3)
-                        ++ ", 0px)"
-                  )
                 ]
+                    ++ (ballTransform2 rot)
             ]
             []
         ]
@@ -115,68 +126,80 @@ ball { x, y, rot } =
 
 view : Model -> Html Msg
 view model =
-    div
-        [ style
-            [ ( "width", (toString w) ++ "px" )
-            , ( "height", (toString h) ++ "px" )
-            , ( "position", "relative" )
-            , ( "background-color", "#FFF" )
-            , ( "overflow", "hidden" )
-            , ( "border", "2px solid black" )
-            ]
-        ]
-        [ ball model.ball
-        , div [] <|
-            List.map2
-                (\styles scribble ->
-                    div
-                        [ style <|
-                            [ ( "position", "absolute" )
-                            , ( "top", "40px" )
-                            , ( "left", "140px" )
+    case model.scribble of
+        Nothing ->
+            text ""
+
+        Just scribble ->
+            let
+                makeScribble =
+                    Scribble.view model.time scribble
+            in
+                div
+                    [ style
+                        [ ( "width", (toString w) ++ "px" )
+                        , ( "height", (toString h) ++ "px" )
+                        , ( "position", "relative" )
+                        , ( "background-color", "#FFF" )
+                        , ( "overflow", "hidden" )
+                        , ( "border", "2px solid black" )
+                        ]
+                    ]
+                    [ ball model.time model.ball
+                    , div [] <|
+                        List.map2
+                            (\styles red ->
+                                div
+                                    [ style <|
+                                        [ ( "position", "absolute" )
+                                        , ( "top", "40px" )
+                                        , ( "left", "140px" )
+                                        ]
+                                            ++ styles
+                                    ]
+                                    [ makeScribble red
+                                    ]
+                            )
+                            [ [ ( "top", "40px" )
+                              , ( "left", "140px" )
+                              , ( "transform", "rotateZ(-30deg)" )
+                              ]
+                            , [ ( "top", "280px" )
+                              , ( "left", "420px" )
+                              , ( "transform", "rotateZ(30deg)" )
+                              ]
+                            , [ ( "top", "60px" )
+                              , ( "left", "600px" )
+                              , ( "transform", "rotateZ(-45deg)" )
+                              ]
                             ]
-                                ++ styles
+                            [ [ 3, 4 ]
+                            , [ 2, 6, 7 ]
+                            , [ 1, 5 ]
+                            ]
+                    , div
+                        [ style
+                            [ ( "width", "160px" )
+                            , ( "height", "160px" )
+                            , ( "position", "absolute" )
+                            , ( "top", "260px" )
+                            , ( "left", "160px" )
+                            , ( "transform", "rotateZ(45deg)" )
+                            ]
                         ]
-                        [ Scribble.view model.time scribble
+                        [ Stamp.view { time = model.time, singleSnake = True } ]
+                    , div
+                        [ style
+                            [ ( "width", "160px" )
+                            , ( "height", "160px" )
+                            , ( "position", "absolute" )
+                            , ( "top", "80px" )
+                            , ( "left", "320px" )
+                            , ( "transform", "rotateZ(210deg)" )
+                            ]
                         ]
-                )
-                [ [ ( "top", "40px" )
-                  , ( "left", "140px" )
-                  , ( "transform", "rotateZ(-30deg)" )
-                  ]
-                , [ ( "top", "280px" )
-                  , ( "left", "420px" )
-                  , ( "transform", "rotateZ(30deg)" )
-                  ]
-                , [ ( "top", "60px" )
-                  , ( "left", "600px" )
-                  , ( "transform", "rotateZ(-45deg)" )
-                  ]
-                ]
-                model.scribbles
-        , div
-            [ style
-                [ ( "width", "160px" )
-                , ( "height", "160px" )
-                , ( "position", "absolute" )
-                , ( "top", "260px" )
-                , ( "left", "160px" )
-                , ( "transform", "rotateZ(45deg)" )
-                ]
-            ]
-            [ Stamp.view { time = model.time, singleSnake = True } ]
-        , div
-            [ style
-                [ ( "width", "160px" )
-                , ( "height", "160px" )
-                , ( "position", "absolute" )
-                , ( "top", "80px" )
-                , ( "left", "320px" )
-                , ( "transform", "rotateZ(210deg)" )
-                ]
-            ]
-            [ Stamp.view { time = model.time, singleSnake = False } ]
-        ]
+                        [ Stamp.view { time = model.time, singleSnake = False } ]
+                    ]
 
 
 subscriptions : Model -> Sub Msg

@@ -87,9 +87,8 @@ star size =
         , viewBox "0 0 100 100"
         ]
         [ path
-            [ d "M20,50 L40,40 L50,20 L60,40 L80,50 L60,60 L50,80 L40,60 M20,20"
+            [ d "M20,50 L50,20 L80,50 L50,80 M20,20"
             , fill "#AEAEAE"
-            , transform "rotate(-12)"
             ]
             []
         ]

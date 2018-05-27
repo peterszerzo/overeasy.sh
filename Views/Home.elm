@@ -32,8 +32,11 @@ link navigate ( url, label ) =
             [ textDecoration none
             , color inherit
             , display inlineBlock
-            , margin (px 10)
-            , borderBottom3 (px 1) solid (hex "000000")
+            , margin2 (px 12) (px 15)
+            , borderBottom3 (px 1) solid (transparent)
+            , hover
+                [ borderBottom3 (px 1) solid (hex "000000")
+                ]
             , opacity
                 (if url == "" then
                     (num 0.4)
@@ -41,7 +44,8 @@ link navigate ( url, label ) =
                     (num 1.0)
                 )
             , fontSize (Css.rem 0.75)
-            , fontWeight normal
+            , property "transform-origin" "center center"
+            , property "-webkit-font-smoothing" "subpixel-antialiased"
             , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
                 [ fontSize (Css.rem 1)
                 ]
@@ -69,9 +73,9 @@ tiltedSubtitleStyle =
         , lineHeight (num 1.4)
         , textAlign center
         , letterSpacing (Css.rem 0.08)
+        , fontSize (Css.rem 0.75)
         , property "transform-origin" "center center"
         , property "-webkit-font-smoothing" "subpixel-antialiased"
-        , fontSize (Css.rem 0.75)
         , firstOfType
             [ left (px -110)
             , property "transform" "rotateZ(-45deg)"
@@ -153,12 +157,14 @@ view config =
                             [ tiltedSubtitleStyle
                             ]
                         ]
-                        [ text "~ a silly scramble from "
+                        [ text "~ cooked up by "
                         , a
                             [ css
                                 [ textDecoration none
                                 , color inherit
-                                , borderBottom3 (px 1) solid currentColor
+                                , hover
+                                    [ borderBottom3 (px 1) solid currentColor
+                                    ]
                                 ]
                             , href "http://peterszerzo.com"
                             ]

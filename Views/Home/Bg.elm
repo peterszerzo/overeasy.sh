@@ -108,12 +108,12 @@ void main() {
   float wave2 = 0.004 * sin(2.0 * angle - time * 0.0006);
   float wave3 = 0.035 * sin(5.0 * angle + 3.14159 / 1.25 - time * 0.00012);
   float wave4 = 0.008 * sin(3.0 * angle + time * 0.0003);
-  if (length(coord) < 0.28 + wave1 + wave2) {
+  if (length(coord) < 0.38 + wave1 + wave2) {
     color = vec4(0.0, 0.0, 0.0, 0.0);
-  } else if (length(coord) < 0.28 + wave3 + wave4) {
-    color = vec4(0.0, 0.0, 0.0, 0.02);
+  } else if (length(coord) < 0.42 + wave3 + wave4) {
+    color = vec4(0.0, 0.0, 0.0, 0.62);
   } else {
-    color = vec4(0.0, 0.0, 0.0, 0.05);
+    color = vec4(0.0, 0.0, 0.0, 1.0);
   }
   gl_FragColor = color;
 }

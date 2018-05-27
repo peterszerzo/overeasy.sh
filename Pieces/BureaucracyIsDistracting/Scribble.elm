@@ -27,12 +27,11 @@ import Pieces.BureaucracyIsDistracting.Constants as Constants
 
 type alias Scribble =
     { offsets : List (List Float)
-    , reds : List Int
     }
 
 
-generator : List Int -> Random.Generator Scribble
-generator reds =
+generator : Random.Generator Scribble
+generator =
     Random.float 1.5 2.8
         |> Random.list 8
         |> Random.map2
@@ -50,7 +49,7 @@ generator reds =
         |> Random.list 10
         |> Random.map
             (\offsets ->
-                Scribble offsets reds
+                Scribble offsets
             )
 
 
@@ -101,14 +100,14 @@ single index time isRed offsets =
             []
 
 
-view : Time.Time -> Scribble -> Html msg
-view time scribble =
+view : Time.Time -> Scribble -> List Int -> Html msg
+view time scribble reds =
     svg [ width "160", height "240", viewBox "0 0 160 240" ]
         [ g []
             (scribble.offsets
                 |> (List.indexedMap
                         (\index offsets ->
-                            single index time (List.member index scribble.reds) offsets
+                            single index time (List.member index reds) offsets
                         )
                    )
             )

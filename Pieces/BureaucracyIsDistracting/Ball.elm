@@ -1,6 +1,7 @@
 module Pieces.BureaucracyIsDistracting.Ball exposing (..)
 
 import Random
+import Time
 
 
 type alias Ball =
@@ -9,6 +10,7 @@ type alias Ball =
     , vx : Float
     , vy : Float
     , rot : Float
+    , time : Time.Time
     }
 
 
@@ -19,6 +21,7 @@ init =
     , vx = 1
     , vy = 0
     , rot = 0.5
+    , time = 0
     }
 
 
@@ -29,14 +32,22 @@ type alias Repositioning =
     }
 
 
-tick : Ball -> Ball
-tick ball =
-    { x = ball.x + ball.vx * 0.001
-    , y = ball.y + ball.vy * 0.001
-    , vx = ball.vx
-    , vy = ball.vy
-    , rot = ball.rot + (0.001 * 3 * 15)
-    }
+tick : Time.Time -> Ball -> Ball
+tick time ball =
+    let
+        timeAdjustment =
+            if ball.time == 0 then
+                1
+            else
+                (time - ball.time) / 16
+    in
+        { x = ball.x + ball.vx * 0.001 * timeAdjustment
+        , y = ball.y + ball.vy * 0.001 * timeAdjustment
+        , vx = ball.vx
+        , vy = ball.vy
+        , rot = ball.rot + (0.001 * 3 * 15 * timeAdjustment)
+        , time = time
+        }
 
 
 shouldReposition : Ball -> Bool
@@ -62,6 +73,7 @@ reposition toMsg ball =
                         , vx = 1
                         , vy = 0
                         , rot = 0
+                        , time = 0
                         }
 
                     1 ->
@@ -70,6 +82,7 @@ reposition toMsg ball =
                         , vx = -1
                         , vy = 0
                         , rot = 0
+                        , time = 0
                         }
 
                     2 ->
@@ -78,6 +91,7 @@ reposition toMsg ball =
                         , vx = 0
                         , vy = 1
                         , rot = 0
+                        , time = 0
                         }
 
                     3 ->
@@ -86,6 +100,7 @@ reposition toMsg ball =
                         , vx = 0
                         , vy = -1
                         , rot = 0
+                        , time = 0
                         }
 
                     _ ->
@@ -94,6 +109,7 @@ reposition toMsg ball =
                         , vx = 1
                         , vy = 0
                         , rot = 0
+                        , time = 0
                         }
             )
             (Random.float 0.2 0.4)
