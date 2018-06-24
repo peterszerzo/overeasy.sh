@@ -62,6 +62,11 @@ subscriptions model =
         ]
 
 
+color : Float -> Float -> Float -> Vec3
+color r g b =
+    vec3 (r / 255) (g / 255) (b / 255)
+
+
 view : Model -> Html Msg
 view model =
     div
@@ -69,46 +74,29 @@ view model =
             [ ( "width", "800px" )
             , ( "height", "480px" )
             , ( "overflow", "hidden" )
-            , ( "background-color", "#FFFFFF" )
-            , ( "border", "2px solid #000" )
+            , ( "background-color", "#FFFFFB" )
             , ( "position", "relative" )
             ]
         ]
         [ SimpleWebGL.view
             { fragmentShader = fragmentShader
             , window = { width = 800, height = 480 }
-            , styles = [ ( "opacity", "0.3" ) ]
+            , styles = [ ( "opacity", "0.8" ) ]
             , makeUniforms =
                 \resolution ->
                     { time = (model.time - model.startTime)
                     , resolution = resolution
-                    , center = vec2 0.5 0.42
-                    , color = vec3 0.2 0.6 0.1
-                    }
-            }
-        , SimpleWebGL.view
-            { fragmentShader = fragmentShader
-            , window = { width = 800, height = 480 }
-            , styles = [ ( "opacity", "0.3" ) ]
-            , makeUniforms =
-                \resolution ->
-                    { time = (model.time - model.startTime)
-                    , resolution = resolution
-                    , center = vec2 0.5 0.58
-                    , color = vec3 0.2 0.6 0.8
                     }
             }
         ]
 
 
-fragmentShader : WebGL.Shader {} (SimpleWebGL.Uniforms { center : Vec2, color : Vec3 }) SimpleWebGL.Varyings
+fragmentShader : WebGL.Shader {} (SimpleWebGL.Uniforms {}) SimpleWebGL.Varyings
 fragmentShader =
     [glsl|
 precision mediump float;
 
 uniform vec2 resolution;
-uniform vec2 center;
-uniform vec3 color;
 uniform float time;
 
 float rand(float x) {
@@ -121,26 +109,21 @@ float perlin(float x) {
   return mix(rand(i), rand(i + 1.0), smoothstep(0.,1.,f));
 }
 
-const float n = 26.0;
+const float n = 38.0;
+
+const vec2 center1 = vec2(0.5, 0.42);
+const vec2 center2 = vec2(0.5, 0.58);
+
+const vec3 color1 = vec3(91.0 / 255.0, 95.0 / 255.0, 151.0 / 255.0);
+const vec3 color2 = vec3(219.0 / 255.0, 84.0 / 255.0, 97.0 / 255.0);
 
 float gridFloor(float x) {
   return floor(n * x) / n + 0.5 / n;
 }
 
 const float pi = 3.14159265358979323;
-const float rotateAngle = 0.3 * pi;
-const mat2 rotate = mat2(cos(rotateAngle), sin(rotateAngle), -sin(rotateAngle), cos(rotateAngle));
 
-void main() {
-
-  vec2 st_original = (gl_FragCoord.xy / resolution.xy - vec2(0.5, 0.5)) * rotate + vec2(0.5, 0.5);
-
-  vec2 st = vec2(gridFloor(st_original.x), gridFloor(st_original.y));
-
-  vec2 stc = st * 10.0;
-  vec2 ipos = floor(stc);
-  vec2 fpos = fract(stc);
-
+vec4 getColor(vec2 st, vec2 center, vec3 color) {
   vec2 fromCenter = st - center;
   float d = length(fromCenter);
 
@@ -154,18 +137,40 @@ void main() {
     angle = acos(dot);
   }
 
-  float randomArgument = sin(6.0 * angle / pi + 0.8 * time / 2000.0);
+  float randomArgument = sin(4.0 * angle / pi + 0.8 * time / 2000.0);
 
-  float maxDistance = 0.22 + 0.18 * perlin(randomArgument);
+  float maxDistance = 0.26 + 0.18 * perlin(randomArgument);
   float fullDistance = maxDistance - 0.10;
 
   if (d > maxDistance) {
-    discard;
+    return vec4(color, 0.0);
   } else if (d > fullDistance) {
-    gl_FragColor = vec4(color, 0.80 * (1.0 - (d - fullDistance) / (maxDistance - fullDistance)));
+    return vec4(color, 1.0 * (1.0 - (d - fullDistance) / (maxDistance - fullDistance)));
   } else {
-    gl_FragColor = vec4(color, 0.80);
+    return vec4(color, 1.0);
   }
+}
+
+vec4 blend(vec4 color1, vec4 color2) {
+  float a = 1.0 - (1.0 - color1.a) * (1.0 - color2.a);
+  if (a < 0.001) {
+    return vec4(0.0, 0.0, 0.0, 0.0);
+  }
+  float r = color1.r * color1.a / a + color2.r * color2.a * (1.0 - color1.a) / a;
+  float g = color1.g * color1.a / a + color2.g * color2.a * (1.0 - color1.a) / a;
+  float b = color1.b * color1.a / a + color2.b * color2.a * (1.0 - color1.a) / a;
+  return vec4(r, g, b, a);
+}
+
+const float rotateAngle = 0.3 * pi;
+const mat2 rotate = mat2(cos(rotateAngle), sin(rotateAngle), -sin(rotateAngle), cos(rotateAngle));
+
+void main() {
+  vec2 st_original = (gl_FragCoord.xy / resolution.xy - vec2(0.5, 0.5)) * rotate + vec2(0.5, 0.5);
+
+  vec2 st = vec2(gridFloor(st_original.x), gridFloor(st_original.y));
+
+  gl_FragColor = blend(getColor(st, center2, color2), getColor(st, center1, color1));
 }
 |]
 

@@ -238,7 +238,7 @@ viewProject config =
             [ css
                 [ width (px 800)
                 , height (px 480)
-                , property "transform" <| "scale(" ++ (toString scale) ++ "," ++ (toString scale) ++ ")"
+                , property "transform" <| "scale(" ++ (toString config.scale) ++ "," ++ (toString config.scale) ++ ")"
                 ]
             ]
             [ fromUnstyled config.project ]
@@ -265,7 +265,8 @@ view model =
             (model.window.height - 40 |> toFloat) / h
 
         scale =
-            min fx fy |> min 1
+            min fx fy
+                |> min 1
 
         transitionCss =
             [ opacity
