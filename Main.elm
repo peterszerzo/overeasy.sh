@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Time
 import Task
+import Process
 import AnimationFrame
 import Css exposing (..)
 import Css.Foreign as Foreign
@@ -12,6 +13,7 @@ import Pieces.MoreSimpleLessSimple
 import Pieces.OurBearingsAreFragile
 import Pieces.BureaucracyIsDistracting
 import Pieces.BordersAreLenient
+import Pieces.WalkWithMe
 import Navigation
 import Window
 import UrlParser exposing (..)
@@ -20,11 +22,12 @@ import Views.Nav
 
 
 type Route
-    = Home
+    = Home Int
     | OurBearingsAreFragile Pieces.OurBearingsAreFragile.Model
     | MoreSimpleLessSimple Pieces.MoreSimpleLessSimple.Model
     | BureaucracyIsDistracting Pieces.BureaucracyIsDistracting.Model
     | BordersAreLenient Pieces.BordersAreLenient.Model
+    | WalkWithMe Pieces.WalkWithMe.Model
     | NotFound
 
 
@@ -32,27 +35,37 @@ parse : Navigation.Location -> Route
 parse location =
     location
         |> parsePath matchers
-        |> Maybe.withDefault Home
+        |> Maybe.withDefault (Home 0)
 
 
 matchers : Parser (Route -> a) a
 matchers =
     oneOf
-        [ s "" |> map Home
+        [ s "" <?> intParam "p" |> map (Maybe.withDefault 0 >> Home)
         , s "more-simple-less-simple" |> map (Pieces.MoreSimpleLessSimple.init |> Tuple.first |> MoreSimpleLessSimple)
         , s "our-bearings-are-fragile" |> map (Pieces.OurBearingsAreFragile.init |> Tuple.first |> OurBearingsAreFragile)
         , s "bureaucracy-is-distracting" |> map (Pieces.BureaucracyIsDistracting.init |> Tuple.first |> BureaucracyIsDistracting)
         , s "borders-are-lenient" |> map (Pieces.BordersAreLenient.init |> Tuple.first |> BordersAreLenient)
+        , s "walk-with-me" |> map (Pieces.WalkWithMe.init |> Tuple.first |> WalkWithMe)
         ]
+
+
+type NavState
+    = Rest
+    | Outbound
+    | Inbound
 
 
 type Msg
     = ChangeRoute Route
     | Navigate String
+    | RestRoute
+    | DelayedNavigate String
     | BearingsAreFragileMsg Pieces.OurBearingsAreFragile.Msg
     | MoreSimpleLessSimpleMsg Pieces.MoreSimpleLessSimple.Msg
     | BureaucracyIsDistractingMsg Pieces.BureaucracyIsDistracting.Msg
     | BordersAreLenientMsg Pieces.BordersAreLenient.Msg
+    | WalkWithMeMsg Pieces.WalkWithMe.Msg
     | Resize Window.Size
     | Tick Time.Time
     | StartTime Time.Time
@@ -60,6 +73,7 @@ type Msg
 
 type alias Model =
     { route : Route
+    , navState : NavState
     , window : Window.Size
     , startTime : Time.Time
     , time : Time.Time
@@ -92,6 +106,7 @@ init location =
             parse location
     in
         ( { route = route
+          , navState = Rest
           , window =
                 { width = 0
                 , height = 0
@@ -110,8 +125,37 @@ init location =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Navigate newPath ->
+            ( model
+            , Navigation.newUrl newPath
+            )
+
+        DelayedNavigate newPath ->
+            ( { model | navState = Outbound }
+            , Process.sleep (200 * Time.millisecond)
+                |> Task.attempt (\res -> Navigate newPath)
+            )
+
         ChangeRoute route ->
-            ( { model | route = route }, routeInitCmd route )
+            ( { model
+                | route = route
+                , navState =
+                    if model.navState == Outbound then
+                        Inbound
+                    else
+                        model.navState
+              }
+            , Cmd.batch
+                [ routeInitCmd route
+                , if model.navState == Outbound then
+                    Process.sleep (20 * Time.millisecond) |> Task.attempt (\res -> RestRoute)
+                  else
+                    Cmd.none
+                ]
+            )
+
+        RestRoute ->
+            ( { model | navState = Rest }, Cmd.none )
 
         Resize window ->
             ( { model | window = window }, Cmd.none )
@@ -121,9 +165,6 @@ update msg model =
 
         StartTime time ->
             ( { model | startTime = time }, Cmd.none )
-
-        Navigate newPath ->
-            ( model, Navigation.newUrl newPath )
 
         MoreSimpleLessSimpleMsg msg ->
             case model.route of
@@ -165,9 +206,24 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        WalkWithMeMsg msg ->
+            case model.route of
+                WalkWithMe model_ ->
+                    ( { model | route = WalkWithMe (Pieces.WalkWithMe.update msg model_ |> Tuple.first) }
+                    , Pieces.WalkWithMe.update msg model_ |> Tuple.second |> Cmd.map WalkWithMeMsg
+                    )
 
-viewProject : Float -> Html.Html msg -> Html.Styled.Html msg
-viewProject scale project =
+                _ ->
+                    ( model, Cmd.none )
+
+
+viewProject :
+    { scale : Float
+    , project : Html.Html msg
+    , css : List Style
+    }
+    -> Html.Styled.Html msg
+viewProject config =
     div
         [ css
             [ width (pct 100)
@@ -175,6 +231,7 @@ viewProject scale project =
             , displayFlex
             , alignItems center
             , justifyContent center
+            , Css.batch config.css
             ]
         ]
         [ div
@@ -184,7 +241,7 @@ viewProject scale project =
                 , property "transform" <| "scale(" ++ (toString scale) ++ "," ++ (toString scale) ++ ")"
                 ]
             ]
-            [ project |> fromUnstyled ]
+            [ fromUnstyled config.project ]
         ]
 
 
@@ -209,6 +266,23 @@ view model =
 
         scale =
             min fx fy |> min 1
+
+        transitionCss =
+            [ opacity
+                (if model.navState == Inbound || model.navState == Outbound then
+                    (num 0)
+                 else
+                    (num 1)
+                )
+            , property "transition" "opacity 0.3s"
+            ]
+
+        viewPrj project =
+            viewProject
+                { project = project
+                , css = transitionCss
+                , scale = scale
+                }
     in
         div
             [ css
@@ -232,16 +306,19 @@ view model =
                     [ property "font-family" "Moon, sans-serif"
                     ]
                 ]
-            , if model.route == Home then
-                text ""
-              else
-                Views.Nav.view (Navigate "/")
+            , case model.route of
+                Home _ ->
+                    text ""
+
+                _ ->
+                    Views.Nav.view (DelayedNavigate "/")
             , (case model.route of
-                Home ->
+                Home page ->
                     Views.Home.view
-                        { navigate = Navigate
+                        { navigate = DelayedNavigate
                         , window = model.window
                         , time = model.time - model.startTime
+                        , css = transitionCss
                         }
 
                 NotFound ->
@@ -250,22 +327,27 @@ view model =
                 OurBearingsAreFragile model ->
                     Pieces.OurBearingsAreFragile.view model
                         |> Html.map BearingsAreFragileMsg
-                        |> viewProject scale
+                        |> viewPrj
 
                 MoreSimpleLessSimple model ->
                     Pieces.MoreSimpleLessSimple.view model
                         |> Html.map MoreSimpleLessSimpleMsg
-                        |> viewProject scale
+                        |> viewPrj
 
                 BureaucracyIsDistracting model ->
                     Pieces.BureaucracyIsDistracting.view model
                         |> Html.map BureaucracyIsDistractingMsg
-                        |> viewProject scale
+                        |> viewPrj
 
                 BordersAreLenient model ->
                     Pieces.BordersAreLenient.view model
                         |> Html.map BordersAreLenientMsg
-                        |> viewProject scale
+                        |> viewPrj
+
+                WalkWithMe model ->
+                    Pieces.WalkWithMe.view model
+                        |> Html.map WalkWithMeMsg
+                        |> viewPrj
               )
             ]
             |> toUnstyled
@@ -287,7 +369,13 @@ subscriptions model =
             BordersAreLenient model ->
                 Pieces.BordersAreLenient.subscriptions model |> Sub.map BordersAreLenientMsg
 
-            _ ->
+            WalkWithMe model ->
+                Pieces.WalkWithMe.subscriptions model |> Sub.map WalkWithMeMsg
+
+            Home _ ->
+                Sub.none
+
+            NotFound ->
                 Sub.none
         , Window.resizes Resize
         , AnimationFrame.times Tick

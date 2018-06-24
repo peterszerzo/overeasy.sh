@@ -4,7 +4,7 @@ import Time
 import Json.Decode as Decode
 import Css exposing (..)
 import Css.Media as Media
-import Html.Styled exposing (Html, text, div, img, h2, a, p, fromUnstyled)
+import Html.Styled exposing (Html, text, div, img, h2, a, p, fromUnstyled, br)
 import Html.Styled.Attributes exposing (class, css, src, href)
 import Html.Styled.Events exposing (onWithOptions)
 import Views.Icons as Icons
@@ -16,6 +16,7 @@ type alias Config msg =
     { navigate : String -> msg
     , window : Window.Size
     , time : Time.Time
+    , css : List Style
     }
 
 
@@ -59,8 +60,6 @@ links =
     [ ( "/more-simple-less-simple", "1. more-simple-less-simple" )
     , ( "/our-bearings-are-fragile", "2. our-bearings-are-fragile" )
     , ( "/bureaucracy-is-distracting", "3. bureaucracy-is-distracting" )
-    , ( "", "4. my-sweet-soothing-tax-id" )
-    , ( "", "5. moebius-racer" )
     ]
 
 
@@ -109,6 +108,7 @@ view config =
             , Css.left (px 0)
             , overflow hidden
             , backgroundColor (hex "ffc235")
+            , Css.batch config.css
             ]
         ]
         [ div
@@ -134,8 +134,8 @@ view config =
                 ]
                 [ div
                     [ css
-                        [ width (px 120)
-                        , height (px 120)
+                        [ width (px 90)
+                        , height (px 90)
                         , margin auto
                         , position relative
                         , fontSize (Css.rem 0.75)
@@ -157,7 +157,8 @@ view config =
                             [ tiltedSubtitleStyle
                             ]
                         ]
-                        [ text "~ cooked up by "
+                        [ br [] []
+                        , text "~ "
                         , a
                             [ css
                                 [ textDecoration none
@@ -168,18 +169,21 @@ view config =
                                 ]
                             , href "http://peterszerzo.com"
                             ]
-                            [ text "peter" ]
+                            [ text "by peter" ]
                         , text " ~"
                         ]
                     ]
                 , div
                     [ css
-                        [ maxWidth (px 640)
+                        [ maxWidth (px 480)
                         , marginTop (px 20)
                         ]
                     ]
                     [ -- link config.navigate ( "/", "Next -->" ) ,
-                      div [] <| List.map (link config.navigate) links
+                      links
+                        |> List.reverse
+                        |> List.map (link config.navigate)
+                        |> div []
 
                     -- , link config.navigate ( "/", "<-- Previous" )
                     ]
