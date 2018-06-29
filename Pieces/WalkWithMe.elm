@@ -165,12 +165,38 @@ vec4 blend(vec4 color1, vec4 color2) {
 const float rotateAngle = 0.3 * pi;
 const mat2 rotate = mat2(cos(rotateAngle), sin(rotateAngle), -sin(rotateAngle), cos(rotateAngle));
 
+const float transitionEvery = 8000.0;
+const float transitionFor = 2000.0;
+
 void main() {
+  float transitionType = mod(time / transitionEvery, 5.0);
+
+  float transitionRatio = smoothstep(0.0, transitionFor, mod(time, transitionEvery));
+
   vec2 st_original = (gl_FragCoord.xy / resolution.xy - vec2(0.5, 0.5)) * rotate + vec2(0.5, 0.5);
 
   vec2 st = vec2(gridFloor(st_original.x), gridFloor(st_original.y));
 
-  gl_FragColor = blend(getColor(st, center2, color2), getColor(st, center1, color1));
+  vec4 computedColor1 = getColor(st, center1, color1);
+  vec4 computedColor2 = getColor(st, center2, color2);
+
+  vec4 colorBlend1 = blend(computedColor2, computedColor1);
+  vec4 colorBlend2 = computedColor1 - computedColor2;
+  vec4 colorBlend3 = computedColor1 * computedColor2;
+  vec4 colorBlend4 = computedColor2 - computedColor1;
+  vec4 colorBlend5 = blend(computedColor1, computedColor2);
+
+  if (transitionType > 4.0) {
+    gl_FragColor = transitionRatio * colorBlend1 + (1.0 - transitionRatio) * colorBlend2;
+  } else if (transitionType > 3.0) {
+    gl_FragColor = transitionRatio * colorBlend2 + (1.0 - transitionRatio) * colorBlend3;
+  } else if (transitionType > 2.0) {
+    gl_FragColor = transitionRatio * colorBlend3 + (1.0 - transitionRatio) * colorBlend4;
+  } else if (transitionType > 1.0) {
+    gl_FragColor = transitionRatio * colorBlend4 + (1.0 - transitionRatio) * colorBlend5;
+  } else {
+    gl_FragColor = transitionRatio * colorBlend5 + (1.0 - transitionRatio) * colorBlend1;
+  }
 }
 |]
 
