@@ -148,7 +148,7 @@ update msg model =
             , Cmd.batch
                 [ routeInitCmd route
                 , if model.navState == Outbound then
-                    Process.sleep (20 * Time.millisecond) |> Task.attempt (\res -> RestRoute)
+                    Process.sleep (0 * Time.millisecond) |> Task.attempt (\res -> RestRoute)
                   else
                     Cmd.none
                 ]

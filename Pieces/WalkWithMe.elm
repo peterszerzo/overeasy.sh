@@ -6,8 +6,6 @@ import Html exposing (Html, Attribute, div, program)
 import Html.Attributes exposing (style)
 import WebGL
 import Concepts.SimpleWebGL as SimpleWebGL
-import Math.Vector2 exposing (Vec2, vec2)
-import Math.Vector3 exposing (Vec3, vec3)
 
 
 type alias Model =
@@ -62,11 +60,6 @@ subscriptions model =
         ]
 
 
-color : Float -> Float -> Float -> Vec3
-color r g b =
-    vec3 (r / 255) (g / 255) (b / 255)
-
-
 view : Model -> Html Msg
 view model =
     div
@@ -81,7 +74,7 @@ view model =
         [ SimpleWebGL.view
             { fragmentShader = fragmentShader
             , window = { width = 800, height = 480 }
-            , styles = [ ( "opacity", "0.8" ) ]
+            , styles = []
             , makeUniforms =
                 \resolution ->
                     { time = (model.time - model.startTime)
@@ -99,6 +92,18 @@ precision mediump float;
 uniform vec2 resolution;
 uniform float time;
 
+const float pi = 3.14159265358979323;
+const float n = 38.0;
+const vec2 center1 = vec2(0.5, 0.42);
+const vec2 center2 = vec2(0.5, 0.58);
+const vec3 color1 = vec3(91.0 / 255.0, 95.0 / 255.0, 151.0 / 255.0);
+const vec3 color2 = vec3(219.0 / 255.0, 84.0 / 255.0, 97.0 / 255.0);
+const float transitionEvery = 4000.0;
+const float transitionFor = 1500.0;
+const float rotateAngle = 0.25 * pi;
+
+const mat2 rotate = mat2(cos(rotateAngle), sin(rotateAngle), -sin(rotateAngle), cos(rotateAngle));
+
 float rand(float x) {
   return fract(sin(x) * 43758.5453123);
 }
@@ -106,42 +111,34 @@ float rand(float x) {
 float perlin(float x) {
   float i = floor(x);  // integer
   float f = fract(x);  // fraction
-  return mix(rand(i), rand(i + 1.0), smoothstep(0.,1.,f));
+  return mix(rand(i), rand(i + 1.0), smoothstep(0., 1., f));
 }
 
-const float n = 38.0;
-
-const vec2 center1 = vec2(0.5, 0.42);
-const vec2 center2 = vec2(0.5, 0.58);
-
-const vec3 color1 = vec3(91.0 / 255.0, 95.0 / 255.0, 151.0 / 255.0);
-const vec3 color2 = vec3(219.0 / 255.0, 84.0 / 255.0, 97.0 / 255.0);
-
-float gridFloor(float x) {
-  return floor(n * x) / n + 0.5 / n;
+// Snaps a coordinate to the edges of an n-by-n grid, returning ( newX, gridLine ) where
+//   - newX is the grid coordinate
+//   - gridLine is the index of the grid
+// E.g. if n = 4, pixelate(0.3) == vec2 ( 0.25, 1 )
+vec2 pixelate(float x) {
+  return vec2(floor(n * x) / n + 0.5 / n, floor(n * x));
 }
 
-const float pi = 3.14159265358979323;
+float easeInOut(float t) {
+  return t;
+}
 
 vec4 getColor(vec2 st, vec2 center, vec3 color) {
   vec2 fromCenter = st - center;
   float d = length(fromCenter);
-
   float dot = dot(fromCenter / d, vec2(1.0, 0.0));
-
   float angle = acos(dot);
-
   if (fromCenter.y < 0.0) {
     angle = 2.0 * pi - acos(dot);
   } else {
     angle = acos(dot);
   }
-
   float randomArgument = sin(4.0 * angle / pi + 0.8 * time / 2000.0);
-
   float maxDistance = 0.26 + 0.18 * perlin(randomArgument);
   float fullDistance = maxDistance - 0.10;
-
   if (d > maxDistance) {
     return vec4(color, 0.0);
   } else if (d > fullDistance) {
@@ -151,7 +148,7 @@ vec4 getColor(vec2 st, vec2 center, vec3 color) {
   }
 }
 
-vec4 blend(vec4 color1, vec4 color2) {
+vec4 addColors(vec4 color1, vec4 color2) {
   float a = 1.0 - (1.0 - color1.a) * (1.0 - color2.a);
   if (a < 0.001) {
     return vec4(0.0, 0.0, 0.0, 0.0);
@@ -162,40 +159,58 @@ vec4 blend(vec4 color1, vec4 color2) {
   return vec4(r, g, b, a);
 }
 
-const float rotateAngle = 0.3 * pi;
-const mat2 rotate = mat2(cos(rotateAngle), sin(rotateAngle), -sin(rotateAngle), cos(rotateAngle));
-
-const float transitionEvery = 8000.0;
-const float transitionFor = 2000.0;
+vec4 pickColor(bool isFirst, vec4 color1, vec4 color2) {
+  if (isFirst) {
+    return color1;
+  }
+  return color2;
+}
 
 void main() {
-  float transitionType = mod(time / transitionEvery, 5.0);
+  const float blendsCount = 8.0;
 
-  float transitionRatio = smoothstep(0.0, transitionFor, mod(time, transitionEvery));
+  float transitionType = mod(time / transitionEvery, blendsCount);
 
-  vec2 st_original = (gl_FragCoord.xy / resolution.xy - vec2(0.5, 0.5)) * rotate + vec2(0.5, 0.5);
+  float transitionRatio = easeInOut(smoothstep(0.0, transitionFor, mod(time, transitionEvery)));
 
-  vec2 st = vec2(gridFloor(st_original.x), gridFloor(st_original.y));
+  vec2 fragmentPoint = (gl_FragCoord.xy / resolution.xy - vec2(0.5, 0.5)) * rotate + vec2(0.5, 0.5);
 
-  vec4 computedColor1 = getColor(st, center1, color1);
-  vec4 computedColor2 = getColor(st, center2, color2);
+  vec2 infoX = pixelate(fragmentPoint.x);
+  vec2 infoY = pixelate(fragmentPoint.y);
 
-  vec4 colorBlend1 = blend(computedColor2, computedColor1);
+  vec2 pixelatedFragmentPoint = vec2(infoX.x, infoY.x);
+
+  float iX = infoX.y;
+  float iY = infoY.y;
+
+  vec4 computedColor1 = getColor(pixelatedFragmentPoint, center1, color1);
+  vec4 computedColor2 = getColor(pixelatedFragmentPoint, center2, color2);
+
+  vec4 colorBlend1 = addColors(computedColor2, computedColor1);
   vec4 colorBlend2 = computedColor1 - computedColor2;
-  vec4 colorBlend3 = computedColor1 * computedColor2;
-  vec4 colorBlend4 = computedColor2 - computedColor1;
-  vec4 colorBlend5 = blend(computedColor1, computedColor2);
+  vec4 colorBlend3 = pickColor(mod(iX + iY, 2.0) == 0.0, computedColor1, computedColor2);
+  vec4 colorBlend4 = computedColor1 * computedColor2;
+  vec4 colorBlend5 = computedColor2;
+  vec4 colorBlend6 = computedColor2 - computedColor1;
+  vec4 colorBlend7 = computedColor1;
+  vec4 colorBlend8 = addColors(computedColor1, computedColor2);
 
-  if (transitionType > 4.0) {
-    gl_FragColor = transitionRatio * colorBlend1 + (1.0 - transitionRatio) * colorBlend2;
+  if (transitionType > 7.0) {
+    gl_FragColor = mix(colorBlend2, colorBlend1, transitionRatio);
+  } else if (transitionType > 6.0) {
+    gl_FragColor = mix(colorBlend3, colorBlend2, transitionRatio);
+  } else if (transitionType > 5.0) {
+    gl_FragColor = mix(colorBlend4, colorBlend3, transitionRatio);
+  } else if (transitionType > 4.0) {
+    gl_FragColor = mix(colorBlend5, colorBlend4, transitionRatio);
   } else if (transitionType > 3.0) {
-    gl_FragColor = transitionRatio * colorBlend2 + (1.0 - transitionRatio) * colorBlend3;
+    gl_FragColor = mix(colorBlend6, colorBlend5, transitionRatio);
   } else if (transitionType > 2.0) {
-    gl_FragColor = transitionRatio * colorBlend3 + (1.0 - transitionRatio) * colorBlend4;
+    gl_FragColor = mix(colorBlend7, colorBlend6, transitionRatio);
   } else if (transitionType > 1.0) {
-    gl_FragColor = transitionRatio * colorBlend4 + (1.0 - transitionRatio) * colorBlend5;
+    gl_FragColor = mix(colorBlend8, colorBlend7, transitionRatio);
   } else {
-    gl_FragColor = transitionRatio * colorBlend5 + (1.0 - transitionRatio) * colorBlend1;
+    gl_FragColor = mix(colorBlend1, colorBlend8, transitionRatio);
   }
 }
 |]
