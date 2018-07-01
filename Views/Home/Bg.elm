@@ -12,7 +12,11 @@ view window time =
     SimpleWebGL.view
         { fragmentShader = fragmentShader
         , window = window
-        , styles = []
+        , styles =
+            if window.width < 600 then
+                [ ( "transform", "scale(1.25)" ) ]
+            else
+                []
         , makeUniforms =
             \resolution ->
                 { time = time

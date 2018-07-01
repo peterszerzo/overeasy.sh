@@ -13,15 +13,18 @@ import Window
 
 
 type alias Config msg =
-    { navigate : String -> msg
+    { delayedNavigate : String -> msg
+    , navigate : String -> msg
+    , links : List ( String, String )
+    , page : Int
     , window : Window.Size
     , time : Time.Time
     , css : List Style
     }
 
 
-link : (String -> msg) -> ( String, String ) -> Html msg
-link navigate ( url, label ) =
+link : { navigate : String -> msg, url : String, label : String, discrete : Bool } -> Html msg
+link { navigate, url, label, discrete } =
     a
         [ href url
         , onWithOptions "click"
@@ -33,18 +36,33 @@ link navigate ( url, label ) =
             [ textDecoration none
             , color inherit
             , display inlineBlock
-            , margin2 (px 12) (px 15)
+            , margin (px 6)
             , borderBottom3 (px 1) solid (transparent)
-            , hover
-                [ borderBottom3 (px 1) solid (hex "000000")
-                ]
+            , padding2 (px 4) (px 12)
+            , borderRadius (px 16)
+            , backgroundColor <|
+                if discrete then
+                    (rgba 0 0 0 0)
+                else
+                    (rgba 0 0 0 0.06)
+            , border2 (px 1) solid
+            , borderColor transparent
+            , property "transition" "all 0.2s"
+            , hover <|
+                if discrete then
+                    [ backgroundColor (rgba 0 0 0 0.04)
+                    ]
+                else
+                    [ backgroundColor (hex "000")
+                    , color (hex "ffc235")
+                    ]
             , opacity
                 (if url == "" then
                     (num 0.4)
                  else
                     (num 1.0)
                 )
-            , fontSize (Css.rem 0.75)
+            , fontSize (Css.rem 0.875)
             , property "transform-origin" "center center"
             , property "-webkit-font-smoothing" "subpixel-antialiased"
             , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
@@ -55,25 +73,16 @@ link navigate ( url, label ) =
         [ text label ]
 
 
-links : List ( String, String )
-links =
-    [ ( "/more-simple-less-simple", "1. more-simple-less-simple" )
-    , ( "/our-bearings-are-fragile", "2. our-bearings-are-fragile" )
-    , ( "/bureaucracy-is-distracting", "3. bureaucracy-is-distracting" )
-    , ( "/walk-with-me", "4. walk-with-me" )
-    ]
-
-
 tiltedSubtitleStyle : Style
 tiltedSubtitleStyle =
     Css.batch
         [ position absolute
-        , top (px -30)
+        , top (px -60)
         , width (px 150)
         , lineHeight (num 1.4)
         , textAlign center
         , letterSpacing (Css.rem 0.08)
-        , fontSize (Css.rem 0.75)
+        , fontSize (Css.rem 0.875)
         , property "transform-origin" "center center"
         , property "-webkit-font-smoothing" "subpixel-antialiased"
         , firstOfType
@@ -123,23 +132,24 @@ view config =
                 , alignItems center
                 , justifyContent center
                 , color (hex "000000")
-                , property "z-index" "100"
+                , property "z-index" "10"
                 ]
             ]
             [ div
                 [ css
                     [ textAlign center
                     , position relative
+                    , top (px 20)
                     , padding (px 20)
                     ]
                 ]
                 [ div
                     [ css
-                        [ width (px 90)
-                        , height (px 90)
+                        [ width (px 120)
+                        , height (px 120)
                         , margin auto
                         , position relative
-                        , fontSize (Css.rem 0.75)
+                        , fontSize (Css.rem 0.875)
                         , Media.withMediaQuery [ "screen and (min-width: 600px)" ]
                             [ width (px 140)
                             , height (px 140)
@@ -159,7 +169,7 @@ view config =
                             ]
                         ]
                         [ br [] []
-                        , text "~ "
+                        , text "~ bryhllaupp with "
                         , a
                             [ css
                                 [ textDecoration none
@@ -170,23 +180,49 @@ view config =
                                 ]
                             , href "http://peterszerzo.com"
                             ]
-                            [ text "by peter" ]
+                            [ text "peter" ]
                         , text " ~"
                         ]
                     ]
                 , div
                     [ css
                         [ maxWidth (px 480)
-                        , marginTop (px 20)
+                        , minHeight (px 160)
+                        , marginTop (px 30)
                         ]
                     ]
-                    [ -- link config.navigate ( "/", "Next -->" ) ,
-                      links
+                    [ if config.page > 0 then
+                        link
+                            { navigate = config.navigate
+                            , url = "/?p=" ++ (toString <| config.page - 1)
+                            , label = "Newer.."
+                            , discrete = True
+                            }
+                      else
+                        text ""
+                    , config.links
                         |> List.reverse
-                        |> List.map (link config.navigate)
+                        |> List.drop (config.page * 3)
+                        |> List.take 3
+                        |> List.map
+                            (\( url, label ) ->
+                                link
+                                    { navigate = config.delayedNavigate
+                                    , url = url
+                                    , label = label
+                                    , discrete = False
+                                    }
+                            )
                         |> div []
-
-                    -- , link config.navigate ( "/", "<-- Previous" )
+                    , if (config.page + 1) * 3 < List.length config.links then
+                        link
+                            { navigate = config.navigate
+                            , url = "/?p=" ++ (toString <| config.page + 1)
+                            , label = "..Older"
+                            , discrete = True
+                            }
+                      else
+                        text ""
                     ]
                 ]
             ]

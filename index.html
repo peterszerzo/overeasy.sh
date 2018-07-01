@@ -24,7 +24,7 @@
     <script src="/_compile/Main.elm"></script>
     <script>
       if (window.location.pathname === "/index.html") {
-        history.pushState({}, "", "/")
+        history.pushState({}, "", "/?p=0")
       }
       setTimeout(function() {
         Elm.Main.embed(document.querySelector("#app"))

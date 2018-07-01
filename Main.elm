@@ -50,6 +50,15 @@ matchers =
         ]
 
 
+links : List ( String, String )
+links =
+    [ ( "/more-simple-less-simple", "1. more-simple-less-simple" )
+    , ( "/our-bearings-are-fragile", "2. our-bearings-are-fragile" )
+    , ( "/bureaucracy-is-distracting", "3. bureaucracy-is-distracting" )
+    , ( "/walk-with-me", "4. walk-with-me" )
+    ]
+
+
 type NavState
     = Rest
     | Outbound
@@ -312,11 +321,14 @@ view model =
                     text ""
 
                 _ ->
-                    Views.Nav.view (DelayedNavigate "/")
+                    Views.Nav.view (DelayedNavigate "/?p=0")
             , (case model.route of
                 Home page ->
                     Views.Home.view
-                        { navigate = DelayedNavigate
+                        { delayedNavigate = DelayedNavigate
+                        , navigate = Navigate
+                        , links = links
+                        , page = page
                         , window = model.window
                         , time = model.time - model.startTime
                         , css = transitionCss
